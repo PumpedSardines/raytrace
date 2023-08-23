@@ -35,6 +35,16 @@ where
     }
 }
 
+impl Vec3<f64> {
+    pub fn reflect(&self, normal: Vec3<f64>) -> Vec3<f64> {
+        *self - normal.scalar(2.0 * self.dot(normal))
+    }
+
+    pub fn lerp(a: Vec3<f64>, b: Vec3<f64>, t: f64) -> Vec3<f64> {
+        a.scalar(1.0 - t) + b.scalar(t)
+    }
+}
+
 impl<T: std::ops::Add<Output = T>> std::ops::Add for Vec3<T> {
     type Output = Vec3<T>;
 

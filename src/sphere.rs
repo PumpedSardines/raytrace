@@ -1,15 +1,21 @@
 use super::hittable::{HitRecord, Hittable};
+use super::material::Material;
 use super::ray::Ray;
 use super::vec3::{Point3, Vec3};
 
 pub struct Sphere {
     pub center: Point3<f64>,
     pub radius: f64,
+    pub material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64) -> Sphere {
-        Sphere { center, radius }
+    pub fn new(center: Point3<f64>, radius: f64, material: Material) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -42,6 +48,7 @@ impl Hittable for Sphere {
                     -outward_normal.normalized()
                 },
                 front_face,
+                material: self.material,
             })
         }
     }

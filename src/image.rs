@@ -27,7 +27,12 @@ impl Image {
         let mut ppm = format!("P3\n{} {}\n255\n", self.width, self.height);
 
         for pixel in &self.pixels {
-            ppm.push_str(&format!("{} {} {}\n", pixel.r, pixel.g, pixel.b));
+            ppm.push_str(&format!(
+                "{} {} {}\n",
+                (pixel.r * 255.0).round(),
+                (pixel.g * 255.0).round(),
+                (pixel.b * 255.0).round()
+            ));
         }
 
         ppm
