@@ -4,12 +4,31 @@ use super::{color::Color, hittable::HitRecord, random::Random, ray::Ray, vec3::V
 pub struct Material {
     pub albedo: Color,
     pub roughness: f64,
-    pub emission: Color,
+    pub emission: Option<Color>,
 }
 
 impl Material {
-    pub fn new(albedo: Color, roughness: f64, emission) -> Material {
-        Material { albedo, roughness, emission }
+    pub fn new() -> Material {
+        Material {
+            albedo: Color::new(0.7, 0.7, 0.7),
+            roughness: 1.0,
+            emission: None,
+        }
+    }
+
+    pub fn set_albedo(mut self, albedo: Color) -> Material {
+        self.albedo = albedo;
+        self
+    }
+
+    pub fn set_emission(mut self, color: Color) -> Material {
+        self.emission = Some(color);
+        self
+    }
+
+    pub fn set_roughness(mut self, roughness: f64) -> Material {
+        self.roughness = roughness;
+        self
     }
 
     pub fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut Random) -> Option<(Color, Ray)> {

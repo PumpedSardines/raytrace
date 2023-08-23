@@ -24,13 +24,13 @@ fn main() {
     let image_width = 1080;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
 
-    let focal_length = 3.0;
+    let focal_length = 2.0;
     let viewport_height = 2.0;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 500;
     let bounce_limit = 10;
 
     let viewport_width = (image_width as f64 / image_height as f64) * viewport_height;
-    let camera_center = Point3::new(0.0, 0.0, 0.0);
+    let camera_center = Point3::new(0.0, 0.0, 1.0);
 
     let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
     let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
@@ -86,39 +86,48 @@ fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {
 
     let objects: Vec<Box<dyn hittable::Hittable>> = vec![
         Box::new(Sphere::new(
-            Point3::new(-1.56, 0.0, -3.0),
-            0.3,
-            Material::new(Color::white(), 1.0),
+            Point3::new(-1.86, 0.1, -2.0),
+            0.6,
+            Material::new()
+                .set_albedo(Color::new(1.0, 0.0, 1.0))
+                .set_roughness(0.6),
         )),
         Box::new(Sphere::new(
-            Point3::new(-0.93, 0.0, -3.0),
+            Point3::new(-0.93, -0.2, -2.0),
             0.3,
-            Material::new(Color::white(), 0.8),
+            Material::new().set_albedo(Color::new(1.0, 0.5, 0.1)),
         )),
         Box::new(Sphere::new(
-            Point3::new(-0.31, 0.0, -3.0),
-            0.3,
-            Material::new(Color::white(), 0.6),
+            Point3::new(-0.31, -0.1, -1.5),
+            0.4,
+            Material::new().set_albedo(Color::new(0.1, 1.0, 0.1)),
         )),
         Box::new(Sphere::new(
-            Point3::new(0.31, 0.0, -3.0),
+            Point3::new(0.31, -0.2, -2.0),
             0.3,
-            Material::new(Color::white(), 0.4),
+            Material::new()
+                .set_albedo(Color::new(0.1, 0.1, 1.0))
+                .set_roughness(0.6),
         )),
         Box::new(Sphere::new(
-            Point3::new(0.93, 0.0, -3.0),
+            Point3::new(0.63, -0.2, -1.0),
             0.3,
-            Material::new(Color::white(), 0.2),
+            Material::new().set_albedo(Color::new(1.0, 1.0, 0.2)),
         )),
         Box::new(Sphere::new(
-            Point3::new(1.56, 0.0, -3.0),
+            Point3::new(1.56, -0.2, -2.0),
             0.3,
-            Material::new(Color::white(), 0.0),
+            Material::new().set_albedo(Color::new(1.0, 0.2, 0.2)),
         )),
         Box::new(Sphere::new(
             Point3::new(0.0, -100.5, -1.0),
             100.0,
-            Material::new(Color::new(0.5, 0.5, 0.5), 1.0),
+            Material::new().set_albedo(Color::new(0.2, 0.5, 1.0)),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 160.5, -1.0),
+            100.0,
+            Material::new().set_emission(Color::new(1.0, 0.7, 0.2)),
         )),
     ];
 
@@ -136,7 +145,13 @@ fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {
     }
     if let Some(hit_info) = current_hit_info {
         if let Some((color, ray)) = hit_info.material.scatter(&ray, &hit_info, rng) {
-            return color * ray_color(ray, depth - 1, rng);
+            if let Some(emission) = hit_info.material.emission {
+                return emission;
+            }
+
+            let light_strength = hit_info.normal.dot(ray.direction).abs();
+
+            return color * ray_color(ray, depth - 1, rng) * Color::grey(light_strength * 0.5);
         } else {
             return Color::black();
         }
