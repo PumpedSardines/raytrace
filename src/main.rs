@@ -1,5 +1,3 @@
-use std::fs;
-
 mod color;
 mod hittable;
 mod image;
@@ -9,9 +7,9 @@ mod ray;
 mod sphere;
 mod vec3;
 
+use crate::image::Image;
 use color::Color;
 use hittable::HitRecord;
-use image::Image;
 use indicatif::ProgressBar;
 use material::Material;
 use random::Random;
@@ -26,7 +24,7 @@ fn main() {
 
     let focal_length = 2.0;
     let viewport_height = 2.0;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 10;
     let bounce_limit = 10;
 
     let viewport_width = (image_width as f64 / image_height as f64) * viewport_height;
@@ -76,7 +74,7 @@ fn main() {
         }
     }
 
-    fs::write("image.ppm", image.to_ppm()).expect("Could not write image file");
+    image.save_png("image.png");
 }
 
 fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {

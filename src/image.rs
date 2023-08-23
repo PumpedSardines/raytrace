@@ -1,4 +1,5 @@
 use super::color::Color;
+use std::fs;
 
 pub struct Image {
     pub width: u32,
@@ -23,7 +24,7 @@ impl Image {
         self.pixels[(y * self.width + x) as usize]
     }
 
-    pub fn to_ppm(&self) -> String {
+    pub fn save_ppm(&self, name: &str) {
         let mut ppm = format!("P3\n{} {}\n255\n", self.width, self.height);
 
         for pixel in &self.pixels {
@@ -35,6 +36,23 @@ impl Image {
             ));
         }
 
-        ppm
+        fs::write(name, ppm).expect("Could not write image file");
+    }
+
+    pub fn save_png(&self, name: &str) {
+        use image::{Rgb, RgbImage};
+
+        let mut img = RgbImage::new(self.width, self.height);
+
+        for (x, y, pixel) in img.enumerate_pixels_mut() {
+            let color = self.get_pixel(x, y);
+            *pixel = Rgb([
+                (color.r * 255.0).round() as u8,
+                (color.g * 255.0).round() as u8,
+                (color.b * 255.0).round() as u8,
+            ]);
+        }
+
+        img.save(name).unwrap();
     }
 }
