@@ -1,7 +1,7 @@
 use super::hittable::{HitRecord, Hittable};
 use super::material::Material;
 use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use super::vec3::Point3;
 
 pub struct Sphere {
     pub center: Point3<f64>,

@@ -1,3 +1,4 @@
+mod camera;
 mod color;
 mod hittable;
 mod image;
@@ -8,6 +9,7 @@ mod sphere;
 mod vec3;
 
 use crate::image::Image;
+use camera::Camera;
 use color::Color;
 use hittable::HitRecord;
 use indicatif::ProgressBar;
@@ -93,7 +95,23 @@ fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {
         Box::new(Sphere::new(
             Point3::new(-0.93, -0.2, -2.0),
             0.3,
-            Material::new().set_albedo(Color::new(1.0, 0.5, 0.1)),
+            Material::new()
+                .set_albedo(Color::white())
+                .set_roughness(0.3),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(-0.23, -0.25, -0.5),
+            0.15,
+            Material::new()
+                .set_albedo(Color::white())
+                .set_roughness(0.1),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.23, -0.25, -0.5),
+            0.15,
+            Material::new()
+                .set_albedo(Color::white())
+                .set_roughness(0.1),
         )),
         Box::new(Sphere::new(
             Point3::new(-0.31, -0.1, -1.5),
@@ -110,7 +128,9 @@ fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {
         Box::new(Sphere::new(
             Point3::new(0.63, -0.2, -1.0),
             0.3,
-            Material::new().set_albedo(Color::new(1.0, 1.0, 0.2)),
+            Material::new()
+                .set_albedo(Color::new(1.0, 1.0, 0.2))
+                .set_roughness(1.0),
         )),
         Box::new(Sphere::new(
             Point3::new(1.56, -0.2, -2.0),
@@ -123,7 +143,7 @@ fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {
             Material::new().set_albedo(Color::new(0.2, 0.5, 1.0)),
         )),
         Box::new(Sphere::new(
-            Point3::new(0.0, 160.5, -1.0),
+            Point3::new(0.0, 1060.5, -1.0),
             100.0,
             Material::new().set_emission(Color::new(1.0, 0.7, 0.2)),
         )),
@@ -143,13 +163,16 @@ fn ray_color(ray: Ray, depth: u8, rng: &mut Random) -> Color {
     }
     if let Some(hit_info) = current_hit_info {
         if let Some((color, ray)) = hit_info.material.scatter(&ray, &hit_info, rng) {
-            if let Some(emission) = hit_info.material.emission {
-                return emission;
-            }
-
             let light_strength = hit_info.normal.dot(ray.direction).abs();
 
-            return color * ray_color(ray, depth - 1, rng) * Color::grey(light_strength * 0.5);
+            let background =
+                color * ray_color(ray, depth - 1, rng) * Color::grey(light_strength * 0.5);
+
+            if let Some(emission) = hit_info.material.emission {
+                return emission + (Color::white() - emission) * background;
+            }
+
+            return background;
         } else {
             return Color::black();
         }

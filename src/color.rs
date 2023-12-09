@@ -39,6 +39,18 @@ impl std::ops::Add for Color {
     }
 }
 
+impl std::ops::Sub for Color {
+    type Output = Color;
+
+    fn sub(self, rhs: Color) -> Color {
+        Color {
+            r: (self.r - rhs.r),
+            g: (self.g - rhs.g),
+            b: (self.b - rhs.b),
+        }
+    }
+}
+
 impl std::ops::Mul for Color {
     type Output = Color;
 
