@@ -37,6 +37,12 @@ impl From<Color> for (u8, u8, u8) {
     }
 }
 
+impl std::iter::Sum for Color {
+    fn sum<I: Iterator<Item = Color>>(iter: I) -> Color {
+        iter.fold(Color::black(), |a, b| a + b)
+    }
+}
+
 impl std::ops::Add for Color {
     type Output = Color;
 

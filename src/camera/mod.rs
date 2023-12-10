@@ -1,7 +1,8 @@
 use random::Random;
+use rayon::prelude::*;
 use vec3::{Point3, Vec3};
 
-use crate::{color::Color, object::hittable::HitRecord, ray::Ray, scene::Scene};
+use crate::{color::Color, object::hittable::Hittable, ray::Ray, scene::Scene};
 
 pub struct Camera {
     pub origin: Point3<f64>,
@@ -63,32 +64,43 @@ impl Camera {
         let pixel_delta_u = self.calc_pixel_delta_u();
         let pixel_delta_v = self.calc_pixel_delta_v();
 
-        let mut rng = Random::new(256);
         let samples_per_pixel_f64 = options.samples_per_pixel as f64;
+
+        // (0..self.image_height)
+        //     .map(|y| {
+        //         (0..self.image_width).map(move |x| {
+        //             (x, y)
+        //         }
+        //     })
+        //     .map(|(x, y)| {
+        //         (0..options.samples_per_pixel)
+        //     })
+        //     .flatten()
+        //     .
 
         for y in 0..self.image_height {
             for x in 0..self.image_width {
-                let mut pixel_color = Color::black();
+                let color: Color = (0..options.samples_per_pixel)
+                    .into_iter()
+                    .map(|i| {
+                        let mut rng = Random::new(i as u32);
+                        // Anti-aliasing
+                        let px = -0.5 + rng.next();
+                        let py = -0.5 + rng.next();
 
-                for _ in 0..options.samples_per_pixel {
-                    // Antialiasing
-                    let px = -0.5 + rng.next();
-                    let py = -0.5 + rng.next();
+                        let pixel_center = viewport_upper_left
+                            + pixel_delta_u.scalar(x as f64 + px)
+                            + pixel_delta_v.scalar(y as f64 + py)
+                            + (pixel_delta_u + pixel_delta_v).scalar(0.5);
 
-                    let pixel_center = viewport_upper_left
-                        + pixel_delta_u.scalar(x as f64 + px)
-                        + pixel_delta_v.scalar(y as f64 + py)
-                        + (pixel_delta_u + pixel_delta_v).scalar(0.5);
+                        let ray_direction = pixel_center - self.origin;
 
-                    let ray_direction = pixel_center - self.origin;
+                        let r = Ray::new(self.origin, ray_direction);
+                        Self::ray_color(scene, r, options.bounce_limit, &mut rng)
+                    })
+                    .sum();
 
-                    let r = Ray::new(self.origin, ray_direction);
-                    pixel_color =
-                        pixel_color + Self::ray_color(scene, r, options.bounce_limit, &mut rng);
-                }
-
-                let color =
-                    (pixel_color * Color::grey(1.0 / samples_per_pixel_f64)).linear_to_gamma();
+                let color = (color * Color::grey(1.0 / samples_per_pixel_f64)).linear_to_gamma();
                 cb((x, y), color);
             }
         }
@@ -100,23 +112,10 @@ impl Camera {
             return Color::black();
         }
 
-        let mut current_hit_info: Option<HitRecord> = None;
-
-        // First loop through all objects to find the closest hit.
-        for object in &scene.objects {
-            if let Some(hit_info) = object.hit(&ray, 0.001, f64::INFINITY) {
-                if let Some(c_hit_info) = current_hit_info {
-                    if hit_info.t < c_hit_info.t {
-                        current_hit_info = Some(hit_info);
-                    }
-                } else {
-                    current_hit_info = Some(hit_info);
-                }
-            }
-        }
+        let hit = scene.hit(&ray, 0.001, f64::INFINITY);
 
         // If we have a hit, calculate the color.
-        if let Some(hit_info) = current_hit_info {
+        if let Some(hit_info) = hit {
             if let Some((color, ray)) = hit_info.material.scatter(&ray, &hit_info, rng) {
                 let light_strength = hit_info.normal.dot(ray.direction).abs();
 

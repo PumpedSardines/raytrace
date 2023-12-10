@@ -20,7 +20,7 @@ fn main() {
 
     let mut image = Image::new(image_width as u32, image_height as u32);
 
-    let progress_bar = ProgressBar::new((image_height * image_width) as u64);
+    let progress_bar = ProgressBar::new(image_height as u64);
 
     progress_bar.inc(1);
 
@@ -34,7 +34,9 @@ fn main() {
         },
         |(x, y), c| {
             image.set_pixel(x, y, c.into());
-            progress_bar.inc(1);
+            if x == image_width - 1 {
+                progress_bar.inc(1);
+            }
         },
     );
 

@@ -14,6 +14,7 @@ indicatif = "0.17.6"
 vec3 = { path = "./vec3" }
 random = { path = "./random" }
 image = { path = "./image" }
+rayon = "1.8.0"
 
 [workspace]
 members = [

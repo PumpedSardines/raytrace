@@ -50,7 +50,7 @@ pub fn scene() -> Scene {
             Point3::new(0.0, 1.0, 0.0),
             Material::new()
                 .set_roughness(0.9)
-                .set_albedo(Color::new(0.5, 0.5, 1.0)),
+                .set_albedo(Color::new(0.2, 0.5, 1.0)),
         )),
     ];
 
