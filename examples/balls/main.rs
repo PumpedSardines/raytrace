@@ -1,5 +1,4 @@
 use image::Image;
-use indicatif::ProgressBar;
 use ray_trace::camera::{Camera, RenderOptions};
 use vec3::{Point3, Vec3};
 mod scene;
@@ -20,25 +19,19 @@ fn main() {
 
     let mut image = Image::new(image_width as u32, image_height as u32);
 
-    let progress_bar = ProgressBar::new(image_height as u64);
-
-    progress_bar.inc(1);
-
     let scene = scene::scene();
 
     camera.render(
         &scene,
         &RenderOptions {
             samples_per_pixel,
-            bounce_limit: 50,
+            bounce_limit: 10,
+            progress_bar: true,
         },
         |(x, y), c| {
             image.set_pixel(x, y, c.into());
-            if x == image_width - 1 {
-                progress_bar.inc(1);
-            }
         },
     );
 
-    image.save_png("./examples/balls/output.png");
+    image.save_png("./examples/balls/output-n.png");
 }

@@ -1,5 +1,7 @@
+use indicatif::ProgressBar;
 use random::Random;
 use rayon::prelude::*;
+use std::sync::mpsc::{self, Receiver, Sender};
 use vec3::{Point3, Vec3};
 
 use crate::{color::Color, object::hittable::Hittable, ray::Ray, scene::Scene};
@@ -16,6 +18,7 @@ pub struct Camera {
 pub struct RenderOptions {
     pub samples_per_pixel: usize,
     pub bounce_limit: u8,
+    pub progress_bar: bool,
 }
 
 impl Camera {
@@ -56,6 +59,8 @@ impl Camera {
         options: &RenderOptions,
         mut cb: impl FnMut((u32, u32), Color) -> (),
     ) {
+        let progress_bar = ProgressBar::new((self.image_width * self.image_height) as u64);
+
         if self.direction == Vec3::new(0.0, 0.0, 0.0) {
             panic!("Camera direction cannot be zero vector.");
         }
@@ -66,20 +71,12 @@ impl Camera {
 
         let samples_per_pixel_f64 = options.samples_per_pixel as f64;
 
-        // (0..self.image_height)
-        //     .map(|y| {
-        //         (0..self.image_width).map(move |x| {
-        //             (x, y)
-        //         }
-        //     })
-        //     .map(|(x, y)| {
-        //         (0..options.samples_per_pixel)
-        //     })
-        //     .flatten()
-        //     .
-
-        for y in 0..self.image_height {
-            for x in 0..self.image_width {
+        (0..self.image_height)
+            .map(|y| (0..self.image_width).map(move |x| (x, y)))
+            .flatten()
+            .collect::<Vec<(u32, u32)>>()
+            .into_par_iter()
+            .map(|(x, y)| {
                 let color: Color = (0..options.samples_per_pixel)
                     .into_iter()
                     .map(|i| {
@@ -100,10 +97,16 @@ impl Camera {
                     })
                     .sum();
 
-                let color = (color * Color::grey(1.0 / samples_per_pixel_f64)).linear_to_gamma();
-                cb((x, y), color);
-            }
-        }
+                progress_bar.inc(1);
+
+                (
+                    (x, y),
+                    (color * Color::grey(1.0 / samples_per_pixel_f64)).linear_to_gamma(),
+                )
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .for_each(|(pixel, color)| cb(pixel, color))
     }
 
     /// Calculate the color of a ray.
