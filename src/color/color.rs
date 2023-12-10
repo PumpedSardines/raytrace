@@ -27,6 +27,16 @@ impl Color {
     }
 }
 
+impl From<Color> for (u8, u8, u8) {
+    fn from(color: Color) -> Self {
+        (
+            (color.r * 255.0) as u8,
+            (color.g * 255.0) as u8,
+            (color.b * 255.0) as u8,
+        )
+    }
+}
+
 impl std::ops::Add for Color {
     type Output = Color;
 

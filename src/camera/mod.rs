@@ -1,11 +1,7 @@
-use crate::{
-    color::Color,
-    hittable::HitRecord,
-    random::Random,
-    ray::Ray,
-    scene::Scene,
-    vec3::{Point3, Vec3},
-};
+use random::Random;
+use vec3::{Point3, Vec3};
+
+use crate::{color::Color, object::hittable::HitRecord, ray::Ray, scene::Scene};
 
 pub struct Camera {
     pub origin: Point3<f64>,
@@ -22,12 +18,12 @@ pub struct RenderOptions {
 }
 
 impl Camera {
-    pub fn viewport_upper_left(&self) -> Point3<f64> {
-        self.origin - self.viewport_u().scalar(0.5) - self.viewport_v().scalar(0.5)
+    fn calc_viewport_upper_left(&self) -> Point3<f64> {
+        self.origin - self.calc_viewport_u().scalar(0.5) - self.calc_viewport_v().scalar(0.5)
             + self.direction.normalized().scalar(self.focal_length)
     }
 
-    pub fn viewport_u(&self) -> Vec3<f64> {
+    fn calc_viewport_u(&self) -> Vec3<f64> {
         let x = 1.0;
         let y = 0.0;
         let z = -1.0 * (x * self.direction.x) / self.direction.z;
@@ -35,28 +31,22 @@ impl Camera {
         Vec3::new(x, y, z).normalized().scalar(self.viewport_width)
     }
 
-    pub fn viewport_v(&self) -> Vec3<f64> {
+    fn calc_viewport_v(&self) -> Vec3<f64> {
         let viewport_height =
             (self.viewport_width / self.image_width as f64) * self.image_height as f64;
-        self.viewport_u()
+        self.calc_viewport_u()
             .cross(self.direction)
             .normalized()
             .scalar(-1.0 * viewport_height)
     }
 
-    pub fn pixel_delta_u(&self) -> Vec3<f64> {
-        self.viewport_u().scalar(1.0 / self.image_width as f64)
+    fn calc_pixel_delta_u(&self) -> Vec3<f64> {
+        self.calc_viewport_u().scalar(1.0 / self.image_width as f64)
     }
 
-    pub fn pixel_delta_v(&self) -> Vec3<f64> {
-        self.viewport_v().scalar(1.0 / self.image_height as f64)
-    }
-
-    pub fn pixel_location(&self, x: f64, y: f64) -> Point3<f64> {
-        self.viewport_upper_left()
-            + self.pixel_delta_u().scalar(x)
-            + self.pixel_delta_v().scalar(y)
-            + (self.pixel_delta_u() + self.pixel_delta_v()).scalar(0.5)
+    fn calc_pixel_delta_v(&self) -> Vec3<f64> {
+        self.calc_viewport_v()
+            .scalar(1.0 / self.image_height as f64)
     }
 
     pub fn render(
@@ -68,6 +58,10 @@ impl Camera {
         if self.direction == Vec3::new(0.0, 0.0, 0.0) {
             panic!("Camera direction cannot be zero vector.");
         }
+
+        let viewport_upper_left = self.calc_viewport_upper_left();
+        let pixel_delta_u = self.calc_pixel_delta_u();
+        let pixel_delta_v = self.calc_pixel_delta_v();
 
         let mut rng = Random::new(256);
         let samples_per_pixel_f64 = options.samples_per_pixel as f64;
@@ -81,7 +75,11 @@ impl Camera {
                     let px = -0.5 + rng.next();
                     let py = -0.5 + rng.next();
 
-                    let pixel_center = self.pixel_location(x as f64 + px, y as f64 + py);
+                    let pixel_center = viewport_upper_left
+                        + pixel_delta_u.scalar(x as f64 + px)
+                        + pixel_delta_v.scalar(y as f64 + py)
+                        + (pixel_delta_u + pixel_delta_v).scalar(0.5);
+
                     let ray_direction = pixel_center - self.origin;
 
                     let r = Ray::new(self.origin, ray_direction);
@@ -139,9 +137,6 @@ impl Camera {
         let unit_direction = ray.direction.normalized();
         let t = 0.5 * (unit_direction.y + 1.0);
 
-        let white = Color::white();
-        let blue = Color::new(0.5, 0.7, 1.0);
-
-        white * (Color::grey(1.0 - t)) + blue * (Color::grey(t))
+        scene.sky_color.lerp(t)
     }
 }

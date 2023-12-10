@@ -1,4 +1,7 @@
-use super::{color::Color, hittable::HitRecord, random::Random, ray::Ray, vec3::Vec3};
+use crate::{color::Color, object::hittable::HitRecord, ray::Ray};
+
+use random::Random;
+use vec3::Vec3;
 
 #[derive(Clone, Copy)]
 pub struct Material {

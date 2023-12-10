@@ -188,6 +188,13 @@ dependencies = [
 
 [[package]]
 name = "image"
+version = "0.1.0"
+dependencies = [
+ "image 0.24.7",
+]
+
+[[package]]
+name = "image"
 version = "0.24.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f3dfdbdd72063086ff443e297b61695500514b1e41095b6fb9a5ab48a70a711"
@@ -348,6 +355,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "random"
+version = "0.1.0"
+dependencies = [
+ "vec3",
+]
+
+[[package]]
+name = "ray_trace"
+version = "0.1.0"
+dependencies = [
+ "image 0.1.0",
+ "indicatif",
+ "random",
+ "vec3",
+]
+
+[[package]]
 name = "rayon"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -365,14 +389,6 @@ checksum = "5ce3fb6ad83f861aac485e76e1985cd109d9a3713802152be56c3b1f0e0658ed"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
-]
-
-[[package]]
-name = "raytracer"
-version = "0.1.0"
-dependencies = [
- "image",
- "indicatif",
 ]
 
 [[package]]
@@ -418,6 +434,10 @@ name = "unicode-width"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51733f11c9c4f72aa0c160008246859e340b00807569a0da0e7a1079b27ba85"
+
+[[package]]
+name = "vec3"
+version = "0.1.0"
 
 [[package]]
 name = "weezl"

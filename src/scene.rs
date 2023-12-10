@@ -1,11 +1,6 @@
-use crate::hittable::Hittable;
+use crate::{color::Gradient, object::hittable::Hittable};
 
 pub struct Scene {
     pub objects: Vec<Box<dyn Hittable>>,
-}
-
-impl Scene {
-    pub fn new(objects: Vec<Box<dyn Hittable>>) -> Self {
-        Self { objects }
-    }
+    pub sky_color: Gradient,
 }

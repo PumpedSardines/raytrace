@@ -1,5 +1,6 @@
-use super::color::Color;
 use std::fs;
+
+pub type Color = (u8, u8, u8);
 
 pub struct Image {
     pub width: u32,
@@ -12,7 +13,7 @@ impl Image {
         Image {
             width,
             height,
-            pixels: vec![Color::black(); (width * height) as usize],
+            pixels: vec![(0, 0, 0); (width * height) as usize],
         }
     }
 
@@ -28,12 +29,7 @@ impl Image {
         let mut ppm = format!("P3\n{} {}\n255\n", self.width, self.height);
 
         for pixel in &self.pixels {
-            ppm.push_str(&format!(
-                "{} {} {}\n",
-                (pixel.r * 255.0).round(),
-                (pixel.g * 255.0).round(),
-                (pixel.b * 255.0).round()
-            ));
+            ppm.push_str(&format!("{} {} {}\n", pixel.0, pixel.1, pixel.2));
         }
 
         fs::write(name, ppm).expect("Could not write image file");
@@ -46,11 +42,7 @@ impl Image {
 
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             let color = self.get_pixel(x, y);
-            *pixel = Rgb([
-                (color.r * 255.0).round() as u8,
-                (color.g * 255.0).round() as u8,
-                (color.b * 255.0).round() as u8,
-            ]);
+            *pixel = Rgb([color.0, color.1, color.2]);
         }
 
         img.save(name).unwrap();

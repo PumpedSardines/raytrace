@@ -1,7 +1,11 @@
-use super::hittable::{HitRecord, Hittable};
-use super::material::Material;
-use super::ray::Ray;
-use super::vec3::Point3;
+use crate::{
+    object::{
+        hittable::{HitRecord, Hittable},
+        material::Material,
+    },
+    ray::Ray,
+};
+use vec3::Point3;
 
 pub struct Sphere {
     pub center: Point3<f64>,
@@ -25,7 +29,7 @@ impl Hittable for Sphere {
         let a = r.direction.dot(r.direction);
         let b = 2.0 * oc.dot(r.direction);
         let c = oc.dot(oc) - self.radius * self.radius;
-        let discriminant = b * b - 4.0 * a * c;
+        let discriminant: f64 = b * b - 4.0 * a * c;
 
         if discriminant <= 0.0 {
             return None;

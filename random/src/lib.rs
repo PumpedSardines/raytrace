@@ -1,4 +1,4 @@
-use super::vec3::Vec3;
+use vec3::Vec3;
 
 pub struct Random {
     seed: u32,

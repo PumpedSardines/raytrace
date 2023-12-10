@@ -1,6 +1,7 @@
-use super::material::Material;
-use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use vec3::{Point3, Vec3};
+
+use crate::object::material::Material;
+use crate::ray::Ray;
 
 #[derive(Clone, Copy)]
 pub struct HitRecord {
