@@ -102,7 +102,7 @@ impl Camera {
 
         let mut current_hit_info: Option<HitRecord> = None;
 
-        // First loop thorugh all objects to find the closest hit.
+        // First loop through all objects to find the closest hit.
         for object in &scene.objects {
             if let Some(hit_info) = object.hit(&ray, 0.001, f64::INFINITY) {
                 if let Some(c_hit_info) = current_hit_info {
