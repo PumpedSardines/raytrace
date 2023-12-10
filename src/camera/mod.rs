@@ -106,7 +106,7 @@ impl Camera {
             })
             .collect::<Vec<_>>()
             .into_iter()
-            .for_each(|(pixel, color)| cb(pixel, color))
+            .for_each(|(pixel, color)| cb(pixel, color));
     }
 
     /// Calculate the color of a ray.
