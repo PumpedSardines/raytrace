@@ -1,4 +1,3 @@
-mod camera;
 mod color;
 mod hittable;
 mod image;
@@ -9,7 +8,6 @@ mod sphere;
 mod vec3;
 
 use crate::image::Image;
-use camera::Camera;
 use color::Color;
 use hittable::HitRecord;
 use indicatif::ProgressBar;

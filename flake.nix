@@ -16,16 +16,11 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         pkgsUnstable = nixpkgsUnstable.legacyPackages.${system};
+        pkgsFor = nixpkgs.legacyPackages;
       in
       {
-        packages = flakeUtils.lib.flattenTree {
-          cargo = pkgs.cargo;
-        };
-        devShell = pkgs.mkShell {
-          buildInputs = with self.packages.${system}; [
-            cargo
-          ];
-        };
+        packages.default = pkgsFor.${system}.callPackage ./default.nix { };
+        devShells = pkgsFor.${system}.callPackage ./shell.nix { };
       }
     );
 }
