@@ -24,7 +24,7 @@ fn main() {
 
     let focal_length = 2.0;
     let viewport_height = 2.0;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 2000;
     let bounce_limit = 10;
 
     let viewport_width = (image_width as f64 / image_height as f64) * viewport_height;
