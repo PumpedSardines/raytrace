@@ -77,10 +77,12 @@ impl Camera {
             .collect::<Vec<(u32, u32)>>()
             .into_par_iter()
             .map(|(x, y)| {
+                let mut rng = Random::new(x + y * self.image_width);
+                rng.next();
+
                 let color: Color = (0..options.samples_per_pixel)
                     .into_iter()
-                    .map(|i| {
-                        let mut rng = Random::new(i as u32);
+                    .map(|_| {
                         // Anti-aliasing
                         let px = -0.5 + rng.next();
                         let py = -0.5 + rng.next();
