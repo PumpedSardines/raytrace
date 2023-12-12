@@ -13,6 +13,22 @@ impl<T> Vec3<T> {
     }
 }
 
+impl From<(f64, f64, f64)> for Vec3<f64> {
+    fn from((x, y, z): (f64, f64, f64)) -> Self {
+        Vec3 { x, y, z }
+    }
+}
+
+impl From<&(f64, f64, f64)> for Vec3<f64> {
+    fn from((x, y, z): &(f64, f64, f64)) -> Self {
+        Vec3 {
+            x: *x,
+            y: *y,
+            z: *z,
+        }
+    }
+}
+
 impl<T: std::ops::Add<Output = T> + std::ops::Mul<Output = T> + Copy> Vec3<T>
 where
     f64: From<T>,
