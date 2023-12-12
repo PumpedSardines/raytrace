@@ -43,6 +43,14 @@ impl Vec3<f64> {
     pub fn lerp(a: Vec3<f64>, b: Vec3<f64>, t: f64) -> Vec3<f64> {
         a.scalar(1.0 - t) + b.scalar(t)
     }
+
+    pub fn zero() -> Vec3<f64> {
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
 }
 
 impl<T: std::ops::Add<Output = T>> std::ops::Add for Vec3<T> {
