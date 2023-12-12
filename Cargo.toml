@@ -12,14 +12,17 @@ path = "src/lib.rs"
 [dependencies]
 indicatif = "0.17.6"
 rayon = "1.8.0"
+# For metal GPU, maybe use this later
+metal = "0.27.0"
 vec3 = { path = "./vec3" }
 random = { path = "./random" }
 image = { path = "./image" }
-metal = "0.27.0"
+obj = { path = "./obj" }
 
 [workspace]
 members = [
   "vec3",
   "random",
-  "image"
+  "image",
+  "obj"
 ]
