@@ -28,7 +28,7 @@ impl Hittable for Plane {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let a = r.direction.dot(self.normal);
 
-        if a.abs() < 0.0001 {
+        if a.abs() < 1e-6 {
             return None;
         }
 
