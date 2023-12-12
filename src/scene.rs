@@ -3,6 +3,7 @@ use crate::{
     object::hittable::{HitRecord, Hittable},
 };
 
+#[derive(Clone)]
 pub struct Scene {
     pub objects: Vec<Box<dyn Hittable>>,
     pub sky_color: Gradient,

@@ -8,6 +8,7 @@ use crate::{
     ray::Ray,
 };
 
+#[derive(Clone)]
 pub struct Plane {
     pub distance_from_origin: f64,
     pub normal: Vec3<f64>,

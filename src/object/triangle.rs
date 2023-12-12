@@ -1,5 +1,6 @@
 use crate::{
     object::{
+        aabb::AABB,
         hittable::{HitRecord, Hittable},
         material::Material,
     },
@@ -10,14 +11,16 @@ use vec3::{Point3, Vec3};
 // Triangle intersection algorithm from:
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution.html
 //
-// Triangle intesection is trickier than sphere intersection so there are a lot more pre computing
+// Triangle intersection is trickier than sphere intersection so there are a lot more pre computing
 // steps here.
 
+#[derive(Clone)]
 pub struct Triangle {
     pub material: Material,
     points: [Point3<f64>; 3],
     normal: Vec3<f64>,
     d: f64,
+    bbox: Option<AABB>,
 }
 
 impl Triangle {
@@ -27,8 +30,10 @@ impl Triangle {
             points,
             material,
             d: 0.0,
+            bbox: None,
         };
         triangle.set_points(points);
+        triangle.update_bbox();
         triangle
     }
 
@@ -38,10 +43,32 @@ impl Triangle {
         let v2 = points[2] - points[0];
         self.normal = v1.cross(v2).normalized();
         self.d = -self.normal.dot(points[0]);
+        self.update_bbox();
+    }
+
+    fn update_bbox(&mut self) {
+        let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut max = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+
+        for point in &self.points {
+            min.x = min.x.min(point.x);
+            min.y = min.y.min(point.y);
+            min.z = min.z.min(point.z);
+
+            max.x = max.x.max(point.x);
+            max.y = max.y.max(point.y);
+            max.z = max.z.max(point.z);
+        }
+
+        self.bbox = Some(AABB::new(min, max));
     }
 }
 
 impl Hittable for Triangle {
+    fn bounding_box(&self) -> &Option<AABB> {
+        &self.bbox
+    }
+
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // If this is zero, the ray is parallel to the plane and no intersection occurs
         let normal_dot_direction = self.normal.dot(r.direction);

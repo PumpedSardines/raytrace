@@ -1,22 +1,28 @@
 use crate::{
     object::{
-        hittable::{HitRecord, Hittable},
+        hittable::{BVHNode, HitRecord, Hittable, HittableList},
         material::Material,
         triangle::Triangle,
     },
     ray::Ray,
 };
 
+#[derive(Clone)]
 pub struct Mesh {
     pub material: Material,
-    pub triangles: Vec<Triangle>,
+    pub triangles: BVHNode,
 }
 
 impl Mesh {
     pub fn new(triangles: Vec<Triangle>, material: Material) -> Mesh {
+        let mut list = HittableList::new(vec![]);
+        for triangle in triangles {
+            list.add(Box::new(triangle));
+        }
+
         Mesh {
             material,
-            triangles,
+            triangles: BVHNode::new(&list),
         }
     }
 
@@ -36,21 +42,14 @@ impl Mesh {
 
 impl Hittable for Mesh {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut closest_so_far = t_max;
-        let mut hit_record = None;
+        let hit_info = self.triangles.hit(&r, t_min, t_max);
 
-        for triangle in &self.triangles {
-            if let Some(record) = triangle.hit(r, t_min, closest_so_far) {
-                closest_so_far = record.t;
-                hit_record = Some(record);
-            }
-        }
-
-        hit_record.map(|mut record| {
-            record.material = self.material;
-            record
-        });
-
-        hit_record
+        hit_info.map(|hit_info| HitRecord {
+            t: hit_info.t,
+            p: hit_info.p,
+            normal: hit_info.normal,
+            front_face: hit_info.front_face,
+            material: self.material,
+        })
     }
 }

@@ -1,5 +1,6 @@
 use crate::{
     object::{
+        aabb::AABB,
         hittable::{HitRecord, Hittable},
         material::Material,
     },
@@ -7,23 +8,53 @@ use crate::{
 };
 use vec3::Point3;
 
+#[derive(Clone)]
 pub struct Sphere {
-    pub center: Point3<f64>,
-    pub radius: f64,
     pub material: Material,
+    center: Point3<f64>,
+    radius: f64,
+    bbox: Option<AABB>,
 }
 
 impl Sphere {
     pub fn new(center: Point3<f64>, radius: f64, material: Material) -> Sphere {
-        Sphere {
+        let mut sphere = Sphere {
             center,
             radius,
             material,
-        }
+            bbox: None,
+        };
+
+        sphere.update_bbx();
+
+        sphere
+    }
+
+    pub fn set_center(mut self, center: Point3<f64>) -> Sphere {
+        self.center = center;
+        self.update_bbx();
+        self
+    }
+
+    pub fn set_radius(mut self, radius: f64) -> Sphere {
+        self.radius = radius;
+        self.update_bbx();
+        self
+    }
+
+    fn update_bbx(&mut self) {
+        self.bbox = Some(AABB::new(
+            self.center - Point3::new(self.radius, self.radius, self.radius),
+            self.center + Point3::new(self.radius, self.radius, self.radius),
+        ));
     }
 }
 
 impl Hittable for Sphere {
+    fn bounding_box(&self) -> &Option<AABB> {
+        &self.bbox
+    }
+
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.dot(r.direction);

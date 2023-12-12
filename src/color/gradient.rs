@@ -2,6 +2,7 @@ use crate::color::Color;
 
 type ColorStop = (f64, Color);
 
+#[derive(Clone)]
 pub struct Gradient {
     colors: Vec<(ColorStop, ColorStop)>,
 }

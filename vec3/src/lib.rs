@@ -19,6 +19,18 @@ impl From<(f64, f64, f64)> for Vec3<f64> {
     }
 }
 
+impl From<Vec3<f64>> for [f64; 3] {
+    fn from(vec: Vec3<f64>) -> Self {
+        [vec.x, vec.y, vec.z]
+    }
+}
+
+impl From<&Vec3<f64>> for [f64; 3] {
+    fn from(vec: &Vec3<f64>) -> Self {
+        [vec.x, vec.y, vec.z]
+    }
+}
+
 impl From<&(f64, f64, f64)> for Vec3<f64> {
     fn from((x, y, z): &(f64, f64, f64)) -> Self {
         Vec3 {
