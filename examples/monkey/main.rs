@@ -7,10 +7,10 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 1920;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 2000;
 
     let camera = Camera {
-        origin: Point3::new(0.0, 5.0, 8.0),
+        origin: Point3::new(0.0, 2.5, 4.0),
         direction: Vec3::new(0.0, -0.5, -1.0),
         focal_length: 1.5,
         image_width,
@@ -34,5 +34,5 @@ fn main() {
         },
     );
 
-    image.save_png("./examples/teapot/output.png");
+    image.save_png("./examples/monkey/output.png");
 }

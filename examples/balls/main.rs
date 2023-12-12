@@ -5,9 +5,9 @@ mod scene;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1080;
+    let image_width = 1920;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 2000;
 
     let camera = Camera {
         origin: Point3::new(2.5, 1.0, 1.5),
