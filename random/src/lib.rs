@@ -9,7 +9,16 @@ impl Random {
         Self { seed }
     }
 
-    pub fn next(&mut self) -> f64 {
+    pub fn from_time() -> Self {
+        Self {
+            seed: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as u32,
+        }
+    }
+
+    pub fn next_u32(&mut self) -> u32 {
         self.seed = self.seed.wrapping_mul(747796405).wrapping_add(2891336453);
 
         let result = (self
@@ -19,7 +28,15 @@ impl Random {
             .wrapping_mul(747796405);
         let result = result.wrapping_shr(22) ^ result;
 
-        result as f64 / u32::MAX as f64
+        result
+    }
+
+    pub fn next_u32_range(&mut self, min: u32, max: u32) -> u32 {
+        min + self.next_u32() % (max - min)
+    }
+
+    pub fn next(&mut self) -> f64 {
+        self.next_u32() as f64 / u32::MAX as f64
     }
 
     pub fn unit_vec3(&mut self) -> Vec3<f64> {
