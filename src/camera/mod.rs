@@ -1,7 +1,6 @@
 use indicatif::ProgressBar;
 use random::Random;
 use rayon::prelude::*;
-use std::sync::mpsc::{self, Receiver, Sender};
 use vec3::{Point3, Vec3};
 
 use crate::{color::Color, object::hittable::Hittable, ray::Ray, scene::Scene};
