@@ -2,81 +2,6 @@
 
 using namespace metal;
 
-struct Camera {
-  float3 origin;
-  float3 viewport_upper_left;
-  float3 pixel_delta_u;
-  float3 pixel_delta_v;
-  uint image_width;
-  uint image_height;
-};
-
-struct Uniforms {
-  uint seed;
-  uint sphere_count;
-  uint samples;
-};
-
-struct Sphere {
-  float3 origin;
-  float radius;
-};
-
-struct Ray {
-  float3 origin;
-  float3 direction;
-};
-
-struct HitInfo {
-  float t;
-  float3 point;
-  float3 normal;
-};
-
-float3 ray_point_at(Ray ray, float t) {
-  return ray.origin + t * ray.direction;
-}
-
-float3 to_gamma(float3 color) {
-  return float3(sqrt(color.x), sqrt(color.y), sqrt(color.z));
-}
-
-bool sphere_hit(Sphere sphere, Ray ray, float t_min, float t_max, thread HitInfo *hit_info) {
-  float3 oc = ray.origin - sphere.origin;
-  float a = dot(ray.direction, ray.direction);
-  float b = 2.0 * dot(oc, ray.direction);
-  float c = dot(oc, oc) - sphere.radius * sphere.radius;
-  float discriminant = b * b - 4.0 * a * c;
-
-  if (discriminant < 0) {
-    return false;
-  }
-
-  float t = (-b - sqrt(discriminant)) / (2.0 * a);
-
-  if(t < t_min || t > t_max) {
-    return false;
-  }
-
-  float3 outwards_normal = (ray_point_at(ray, t) - sphere.origin);
-  bool front_face = dot(ray.direction, outwards_normal) < 0.0;
-
-  hit_info->t = t;
-  hit_info->point = ray_point_at(ray, t);
-  
-  if (front_face) {
-    hit_info->normal = normalize(outwards_normal);
-  } else {
-    hit_info->normal = -normalize(outwards_normal);
-  }
-
-  return true;
-}
-
-float3 lerp(float3 a, float3 b, float t) {
-  return (1.0 - t) * a + t * b;
-}
-
 uint rand_xorshift(uint rng_state){    
   rng_state ^= (rng_state << 13);
   rng_state ^= (rng_state >> 17);    
@@ -122,6 +47,90 @@ uint random_on_hemisphere(thread float3& output, thread float3& normal, uint rng
     output = -on_unit_sphere;
   }
   return rs;
+}
+
+
+struct Camera {
+  float3 origin;
+  float3 viewport_upper_left;
+  float3 pixel_delta_u;
+  float3 pixel_delta_v;
+  uint image_width;
+  uint image_height;
+};
+
+struct Uniforms {
+  uint seed;
+  uint sphere_count;
+  uint samples;
+};
+
+struct Material {
+  float3 albedo;
+  float roughness;
+};
+
+struct Sphere {
+  float3 origin;
+  float radius;
+  Material material;
+};
+
+struct Ray {
+  float3 origin;
+  float3 direction;
+};
+
+struct HitInfo {
+  float t;
+  float3 point;
+  float3 normal;
+  Material material;
+};
+
+float3 ray_point_at(Ray ray, float t) {
+  return ray.origin + t * ray.direction;
+}
+
+float3 to_gamma(float3 color) {
+  return float3(sqrt(color.x), sqrt(color.y), sqrt(color.z));
+}
+
+bool sphere_hit(Sphere sphere, Ray ray, float t_min, float t_max, thread HitInfo *hit_info) {
+  float3 oc = ray.origin - sphere.origin;
+  float a = dot(ray.direction, ray.direction);
+  float b = 2.0 * dot(oc, ray.direction);
+  float c = dot(oc, oc) - sphere.radius * sphere.radius;
+  float discriminant = b * b - 4.0 * a * c;
+
+  if (discriminant < 0) {
+    return false;
+  }
+
+  float t = (-b - sqrt(discriminant)) / (2.0 * a);
+
+  if(t < t_min || t > t_max) {
+    return false;
+  }
+
+  float3 outwards_normal = (ray_point_at(ray, t) - sphere.origin);
+  bool front_face = dot(ray.direction, outwards_normal) < 0.0;
+
+  hit_info->t = t;
+  hit_info->point = ray_point_at(ray, t);
+  hit_info->material = sphere.material;
+  
+  if (front_face) {
+    hit_info->normal = normalize(outwards_normal);
+  } else {
+    hit_info->normal = -normalize(outwards_normal);
+  }
+
+  return true;
+}
+
+float3 lerp(float3 a, float3 b, float t) {
+  return (1.0 - t) * a + t * b;
 }
 
 kernel void ray_trace(
@@ -174,26 +183,35 @@ kernel void ray_trace(
         }
       }
 
+      Material material = hit_info.material;
+
       if (hit) {
         float3 rand_direction_first_pass;
         rng_state = rand_unit_float3(rand_direction_first_pass, rng_state);
+
         float3 rand_direction = rand_direction_first_pass + hit_info.normal;
-        float3 scatter_direction = reflect(ray.direction, hit_info.normal);
-        // float light_strength = abs(dot(hit_info.normal, ray.direction));
+        float3 reflect_direction = reflect(ray.direction, hit_info.normal);
 
-        float3 color = float3(1.0, 1.0, 1.0);
+        float3 scatter_direction = lerp(
+          reflect_direction,
+          rand_direction,
+          1.0
+        );
 
-        float3 multiply_color = color * 0.5; //* light_strength;
+        ray.origin = hit_info.point;
+        ray.direction = scatter_direction;
+
+        float light_strength = abs(dot(hit_info.normal, ray.direction));
+
+        float3 color = material.albedo;
+
+        float3 multiply_color = color * 0.5 * light_strength;
 
         if (current_color.x < 0.0) {
           current_color = multiply_color;
         } else {
           current_color = current_color * multiply_color;
         }
-
-        ray.origin = hit_info.point;
-        ray.direction = rand_direction;
-
       } else {
         float t = 0.5 * (ray.direction.y + 1.0);
         float3 sky_color = lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.7, 1.0), t);

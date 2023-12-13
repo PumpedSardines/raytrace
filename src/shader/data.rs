@@ -17,6 +17,13 @@ pub struct Uniforms {
 pub struct Sphere {
     pub origin: Vec3A,
     pub radius: f32,
+    pub material: Material,
+}
+
+#[repr(C)]
+pub struct Material {
+    pub albedo: Vec3A,
+    pub roughness: f32,
 }
 
 /// This is the camera data that is passed to the shader.
