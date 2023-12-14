@@ -1,13 +1,13 @@
+use super::type_mapping;
+use crate::color::Color;
+use crate::world::World;
 use glam::f32::*;
 use metal::*;
 use objc::rc::autoreleasepool;
-use rand::Rng;
 
-use super::data::{CameraBake, RenderData, Sphere, Uniforms};
-
-pub fn render(data: RenderData) -> Vec<Vec3A> {
-    let width = data.camera.image_width;
-    let height = data.camera.image_height;
+pub(crate) fn render(world: &World) -> Vec<Color> {
+    let width = world.camera.image_width;
+    let height = world.camera.image_height;
 
     autoreleasepool(|| {
         let device = Device::system_default().expect("No device found");
@@ -25,7 +25,7 @@ pub fn render(data: RenderData) -> Vec<Vec3A> {
         let pipeline_state = create_pipeline_state(&device);
         encoder.set_compute_pipeline_state(&pipeline_state);
 
-        let buffers = create_buffers(&device, &data);
+        let buffers = create_buffers(&device, &world);
 
         encoder.set_buffer(0, Some(&buffers.output), 0);
         encoder.set_buffer(1, Some(&buffers.uniforms), 0);
@@ -52,7 +52,8 @@ pub fn render(data: RenderData) -> Vec<Vec3A> {
 
         unsafe {
             for i in 0..width * height {
-                data.push(*ptr.add(i as usize));
+                let v = *ptr.add(i as usize);
+                data.push(Color::new(v.x, v.y, v.z));
             }
         };
 
@@ -60,11 +61,11 @@ pub fn render(data: RenderData) -> Vec<Vec3A> {
     })
 }
 
-const LIBRARY_DATA: &str = include_str!("ray_trace.metal");
+const SHADER_FILE: &str = super::shader::shader_file();
 
 fn create_pipeline_state(device: &Device) -> ComputePipelineState {
     let library = device
-        .new_library_with_source(LIBRARY_DATA, &CompileOptions::new())
+        .new_library_with_source(SHADER_FILE, &CompileOptions::new())
         .unwrap_or_else(|err| {
             println!("Failed to create library: {}", err);
             std::process::exit(1);
@@ -88,29 +89,26 @@ struct Buffers {
     spheres: metal::Buffer,
 }
 
-fn create_buffers(device: &Device, data: &RenderData) -> Buffers {
+fn create_buffers(device: &Device, data: &World) -> Buffers {
     let width = data.camera.image_width;
     let height = data.camera.image_height;
     let spheres = &data.spheres;
-    let camera_bake = data.camera.bake();
+    let camera = &data.camera;
 
     let camera = device.new_buffer_with_data(
-        unsafe { std::mem::transmute(&camera_bake) },
-        std::mem::size_of::<CameraBake>() as u64,
+        unsafe { std::mem::transmute(&camera) },
+        std::mem::size_of::<type_mapping::Camera>() as u64,
         MTLResourceOptions::CPUCacheModeDefaultCache,
     );
 
-    let mut r = rand::thread_rng();
-
     let uniforms = {
-        let uniforms = Uniforms {
-            seed: r.gen(),
-            samples: 2000,
+        let uniforms = type_mapping::Uniforms {
+            samples: 1,
             sphere_count: spheres.len() as u32,
         };
         device.new_buffer_with_data(
             unsafe { std::mem::transmute(&uniforms) },
-            std::mem::size_of::<Uniforms>() as u64,
+            std::mem::size_of::<type_mapping::Uniforms>() as u64,
             MTLResourceOptions::CPUCacheModeDefaultCache,
         )
     };
@@ -118,7 +116,7 @@ fn create_buffers(device: &Device, data: &RenderData) -> Buffers {
     let spheres = {
         device.new_buffer_with_data(
             unsafe { std::mem::transmute(spheres.as_ptr()) },
-            (spheres.len() * std::mem::size_of::<Sphere>()) as u64,
+            (spheres.len() * std::mem::size_of::<type_mapping::Camera>()) as u64,
             MTLResourceOptions::CPUCacheModeDefaultCache,
         )
     };

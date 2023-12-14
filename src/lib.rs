@@ -1,2 +1,8 @@
 pub mod camera;
-pub mod shader;
+pub mod color;
+pub mod material;
+pub mod objects;
+pub mod position;
+pub mod world;
+
+pub(crate) mod gpu;
