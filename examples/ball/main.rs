@@ -45,7 +45,6 @@ fn main() {
 
     let img = ImageBuffer::from_fn(image_width, image_height, |x, y| {
         let v = colors[(x + y * image_width) as usize];
-        println!("{} {} {}", v.r, v.g, v.b);
         let r = (v.r * 255.0) as u8;
         let g = (v.g * 255.0) as u8;
         let b = (v.b * 255.0) as u8;
