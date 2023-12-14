@@ -2,8 +2,8 @@
 
 using namespace metal;
 
-// WARNING: This imports are not handled by the Metal compiler
-// but instead by my own script. Didn't get the imports to work ¯\(ツ)/¯
+// WARNING: These imports are not handled by the Metal compiler
+// but instead by my own script. Didn't get the imports to work ¯\_(ツ)_/¯
 #include "utils.h"
 #include "input.h"
 #include "random.h"
