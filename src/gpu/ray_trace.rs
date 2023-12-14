@@ -92,8 +92,11 @@ struct Buffers {
 fn create_buffers(device: &Device, data: &World) -> Buffers {
     let width = data.camera.image_width;
     let height = data.camera.image_height;
-    let spheres = &data.spheres;
-    let camera = &data.camera;
+    let spheres: &Vec<type_mapping::Sphere> = &data.spheres;
+    let camera: &type_mapping::Camera = &data.camera;
+
+    println!("{:?}", camera);
+    println!("{:?}", spheres);
 
     let camera = device.new_buffer_with_data(
         unsafe { std::mem::transmute(&camera) },

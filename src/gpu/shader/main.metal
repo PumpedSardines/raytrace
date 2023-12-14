@@ -98,7 +98,7 @@ kernel void ray_trace(
 
     float3 current_color = float3(-1.0, -1.0, -1.0);
 
-    for(uint depth = 0; depth < 1; depth++) {
+    for(uint depth = 0; depth < 10; depth++) {
       HitInfo hit_info;
       bool hit = false;
       float closest = 10000.0;
@@ -128,11 +128,11 @@ kernel void ray_trace(
         );
 
         ray.origin = hit_info.point;
-        ray.direction = scatter_direction;
+        ray.direction = reflect_direction;
 
         float light_strength = abs(dot(hit_info.normal, ray.direction));
 
-        float3 color = material.albedo;
+        float3 color = float3(0.0, 0.0, 0.0);
 
         float3 multiply_color = color * 0.5 * light_strength;
 

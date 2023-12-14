@@ -1,6 +1,5 @@
 use crate::{color::Color, gpu::ToTypeMapping};
 
-#[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Material {
     /// The color of the material

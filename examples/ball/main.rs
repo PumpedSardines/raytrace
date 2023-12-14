@@ -12,9 +12,6 @@ fn main() {
     let aspect_ratio = 4.0 / 3.0;
     let image_width = 1024;
     let image_height = (image_width as f32 / aspect_ratio) as u32;
-    let samples = 1;
-
-    let mut output = vec![Color::new(0.0, 0.0, 0.0); (image_width * image_height) as usize];
 
     let world = World::new()
         .with_camera(Camera {
@@ -48,6 +45,7 @@ fn main() {
 
     let img = ImageBuffer::from_fn(image_width, image_height, |x, y| {
         let v = colors[(x + y * image_width) as usize];
+        println!("{} {} {}", v.r, v.g, v.b);
         let r = (v.r * 255.0) as u8;
         let g = (v.g * 255.0) as u8;
         let b = (v.b * 255.0) as u8;
