@@ -13,7 +13,7 @@ uint rand(thread float& output, uint rng_state) {
 
 uint rand_unit_float3(thread float3& output, uint rng_state) {
   uint rs = rand_xorshift(rng_state);
-  /* while (true) { */
+  while (true) {
     float x;
     rs = rand(x, rs);
     float y;
@@ -27,11 +27,11 @@ uint rand_unit_float3(thread float3& output, uint rng_state) {
       2.0 * z - 1.0
     );
 
-    /* if (dot(p, p) < 1.0) { */
+    if (dot(p, p) < 1.0) {
       output = normalize(p);
       return rs;
-  /*   } */
-  /* } */
+    }
+  }
 }
 
 uint random_on_hemisphere(thread float3& output, thread float3& normal, uint rng_state) {

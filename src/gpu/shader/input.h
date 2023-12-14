@@ -8,6 +8,7 @@ struct Camera {
 };
 
 struct Uniforms {
+  uint seed;
   uint sphere_count;
   uint samples;
 };

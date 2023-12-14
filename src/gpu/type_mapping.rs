@@ -1,7 +1,7 @@
 use glam::f32::*;
 
-#[repr(C)]
 #[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub(crate) struct Camera {
     pub origin: Vec3A,
     pub viewport_upper_left: Vec3A,
@@ -11,22 +11,23 @@ pub(crate) struct Camera {
     pub image_height: u32,
 }
 
-#[repr(C)]
 #[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub struct Uniforms {
+    pub seed: u32,
     pub sphere_count: u32,
     pub samples: u32,
 }
 
-#[repr(C)]
 #[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub(crate) struct Material {
     pub albedo: Vec3A,
     pub roughness: f32,
 }
 
-#[repr(C)]
 #[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub(crate) struct Sphere {
     pub center: Vec3A,
     pub radius: f32,

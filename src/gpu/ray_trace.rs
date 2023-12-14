@@ -90,23 +90,25 @@ struct Buffers {
 }
 
 fn create_buffers(device: &Device, data: &World) -> Buffers {
+    // WARNING: THIS FUNCTION IS SUPER UNSAFE
+    // I've fucked up multiple times modifying this function.
+    // Change it carefully
+
     let width = data.camera.image_width;
     let height = data.camera.image_height;
     let spheres: &Vec<type_mapping::Sphere> = &data.spheres;
     let camera: &type_mapping::Camera = &data.camera;
 
-    println!("{:?}", camera);
-    println!("{:?}", spheres);
-
     let camera = device.new_buffer_with_data(
-        unsafe { std::mem::transmute(&camera) },
+        unsafe { std::mem::transmute(camera) },
         std::mem::size_of::<type_mapping::Camera>() as u64,
         MTLResourceOptions::CPUCacheModeDefaultCache,
     );
 
     let uniforms = {
         let uniforms = type_mapping::Uniforms {
-            samples: 1,
+            seed: 0,
+            samples: 100,
             sphere_count: spheres.len() as u32,
         };
         device.new_buffer_with_data(
@@ -119,7 +121,7 @@ fn create_buffers(device: &Device, data: &World) -> Buffers {
     let spheres = {
         device.new_buffer_with_data(
             unsafe { std::mem::transmute(spheres.as_ptr()) },
-            (spheres.len() * std::mem::size_of::<type_mapping::Camera>()) as u64,
+            (spheres.len() * std::mem::size_of::<type_mapping::Sphere>()) as u64,
             MTLResourceOptions::CPUCacheModeDefaultCache,
         )
     };
