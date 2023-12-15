@@ -19,7 +19,7 @@ kernel void ray_trace(
   device const Camera *camera [[ buffer(2) ]],
 
   device const Sphere *spheres [[ buffer(3) ]],
-  device const Plane *planes [[ buffer(4) ]]
+  device const Plane *planes [[ buffer(4) ]],
 ) {
 
   uint width = camera->image_width;

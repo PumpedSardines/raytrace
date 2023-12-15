@@ -68,6 +68,7 @@ bool plane_hit(const device Plane& plane, Ray ray, float t_min, float t_max, thr
 bool calc_hit(
   const device Sphere* spheres,
   const device Plane* planes,
+  const device Triangle* triangles,
   const device Uniforms* uniforms,
   Ray ray,
   thread const device Material ** material,
@@ -93,6 +94,16 @@ bool calc_hit(
       hit = true;
       hit_info = temp_hit_info;
       *material = &spheres[i].material;
+      closest = temp_hit_info.t;
+    }
+  }
+
+  for(uint i = 0; i < uniforms->triangle_count; i++) {
+    HitInfo temp_hit_info;
+    if (triangle_hit(triangles[i], ray, 0.001, closest, temp_hit_info)) {
+      hit = true;
+      hit_info = temp_hit_info;
+      *material = &triangles[i].material;
       closest = temp_hit_info.t;
     }
   }
