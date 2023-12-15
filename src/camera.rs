@@ -66,7 +66,7 @@ impl Camera {
         let origin = self.origin.to_vec3a();
         let direction = self.direction.to_vec3a();
 
-        origin - self.calc_viewport_u() * 0.5 - self.calc_viewport_v() * 0.5
+        origin - (self.calc_viewport_u() * 0.5) - (self.calc_viewport_v() * 0.5)
             + (direction.normalize() * self.focal_length)
     }
 
@@ -88,11 +88,11 @@ impl Camera {
     }
 
     fn calc_pixel_delta_u(&self) -> Vec3A {
-        self.calc_viewport_u() * (1.0 / self.image_width as f32)
+        self.calc_viewport_u() / self.image_width as f32
     }
 
     fn calc_pixel_delta_v(&self) -> Vec3A {
-        self.calc_viewport_v() * (1.0 / self.image_height as f32)
+        self.calc_viewport_v() / self.image_height as f32
     }
 }
 

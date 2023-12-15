@@ -5,13 +5,16 @@ use ray_trace::{
     material::Material,
     objects::Sphere,
     position::{Position, Vector},
+    renderer::{RayTraceRenderOptions, RayTraceRenderer},
     world::World,
 };
 
 fn main() {
     let aspect_ratio = 4.0 / 3.0;
-    let image_width = 1024;
+    let image_width = 1920;
     let image_height = (image_width as f32 / aspect_ratio) as u32;
+
+    let renderer = RayTraceRenderer::new();
 
     let world = World::new()
         .with_camera(Camera {
@@ -41,7 +44,12 @@ fn main() {
             }),
         ]);
 
-    let colors = world.render();
+    let options = RayTraceRenderOptions::default()
+        .with_image_samples(10)
+        .with_pixel_samples(100)
+        .with_max_bounces(100);
+
+    let colors = renderer.render(&world, &options);
 
     let img = ImageBuffer::from_fn(image_width, image_height, |x, y| {
         let v = colors[(x + y * image_width) as usize];

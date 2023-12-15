@@ -16,7 +16,9 @@ pub(crate) struct Camera {
 pub struct Uniforms {
     pub seed: u32,
     pub sphere_count: u32,
+    pub plane_count: u32,
     pub samples: u32,
+    pub max_bounces: u32,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -32,6 +34,43 @@ pub(crate) struct Sphere {
     pub center: Vec3A,
     pub radius: f32,
     pub material: Material,
+}
+
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+pub(crate) struct Plane {
+    pub normal: Vec3A,
+    pub distance: f32,
+    pub material: Material,
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Self {
+            albedo: Vec3A::new(0.0, 0.0, 0.0),
+            roughness: 0.0,
+        }
+    }
+}
+
+impl Default for Sphere {
+    fn default() -> Self {
+        Self {
+            center: Vec3A::new(0.0, 0.0, 0.0),
+            radius: 0.0,
+            material: Material::default(),
+        }
+    }
+}
+
+impl Default for Plane {
+    fn default() -> Self {
+        Self {
+            normal: Vec3A::new(0.0, 0.0, 0.0),
+            distance: 0.0,
+            material: Material::default(),
+        }
+    }
 }
 
 pub(crate) trait ToTypeMapping {

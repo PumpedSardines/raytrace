@@ -10,7 +10,9 @@ struct Camera {
 struct Uniforms {
   uint seed;
   uint sphere_count;
+  uint plane_count;
   uint samples;
+  uint max_bounces;
 };
 
 struct Material {
@@ -21,5 +23,11 @@ struct Material {
 struct Sphere {
   float3 center;
   float radius;
+  Material material;
+};
+
+struct Plane {
+  float3 normal;
+  float distance;
   Material material;
 };
