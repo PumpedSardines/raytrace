@@ -13,7 +13,7 @@ const TEAPOT_OBJ: &str = include_str!("teapot.obj");
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 800;
+    let image_width = 1920;
     let image_height = (image_width as f32 / aspect_ratio) as u32;
 
     let renderer = RayTraceRenderer::new();
@@ -48,7 +48,7 @@ fn main() {
     let options = RayTraceRenderOptions::default()
         .with_image_samples(10)
         .with_pixel_samples(1)
-        .with_max_bounces(10);
+        .with_max_bounces(100);
 
     let colors = renderer.render(&world, &options);
 

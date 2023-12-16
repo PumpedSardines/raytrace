@@ -65,7 +65,7 @@ fn main() {
 
     let options = RayTraceRenderOptions::default()
         .with_image_samples(10)
-        .with_pixel_samples(100)
+        .with_pixel_samples(200)
         .with_max_bounces(10);
 
     let colors = renderer.render(&world, &options);
