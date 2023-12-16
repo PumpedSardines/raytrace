@@ -154,6 +154,7 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
             samples: options.pixel_samples,
             sphere_count: spheres.len() as u32,
             plane_count: planes.len() as u32,
+            bvh_nodes_count: bvh_nodes.len() as u32,
             triangle_count: triangles.len() as u32,
             max_bounces: options.max_bounces,
         };

@@ -48,8 +48,8 @@ fn main() {
     world.build();
 
     let options = RayTraceRenderOptions::default()
-        .with_image_samples(100)
-        .with_pixel_samples(1)
+        .with_image_samples(10)
+        .with_pixel_samples(100)
         .with_max_bounces(100);
 
     let colors = renderer.render(&world, &options);

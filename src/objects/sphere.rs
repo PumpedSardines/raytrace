@@ -22,10 +22,6 @@ impl ToTypeMapping for Sphere {
         Self::TypeMapping {
             center: self.origin.to_vec3a(),
             radius: self.radius,
-            bbox: crate::gpu::type_mapping::AABB {
-                min: self.origin.to_vec3a() - self.radius,
-                max: self.origin.to_vec3a() + self.radius,
-            },
             material: self.material.to_type_mapping(),
         }
     }

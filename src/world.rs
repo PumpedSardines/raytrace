@@ -67,7 +67,11 @@ impl World {
 
     pub fn build(&mut self) {
         assert!(!self.is_built);
-        self.bvh_nodes = build_bvh_tree(&self.triangles, &self.spheres);
+        self.bvh_nodes = if self.triangles.len() != 0 {
+            build_bvh_tree(&self.triangles)
+        } else {
+            vec![]
+        };
         self.is_built = true;
     }
 }

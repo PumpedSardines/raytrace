@@ -40,6 +40,7 @@ bool triangle_hit(
 
     hit_info.t = t;
     hit_info.point = point;
+    hit_info.material = &triangle.material;
 
     if (front_face) {
       hit_info.normal = normalize(triangle.normal);

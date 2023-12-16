@@ -33,6 +33,8 @@ bool sphere_hit(
     hit_info.normal = -normalize(outwards_normal);
   }
 
+  hit_info.material = &sphere.material;
+
   return true;
 }
 

@@ -62,18 +62,20 @@ kernel void ray_trace(
     for(uint depth = 0; depth < uniforms->max_bounces; depth++) {
       // Check if the ray hits anything
       volatile HitInfo hit_info;
-      volatile const device Material* material;
+
       bool hit = calc_hit(
         spheres,
         planes,
         triangles,
+        bvh_nodes,
         uniforms,
         ray,
-        &material,
         hit_info
       );
 
+
       if (hit) {
+        const device Material *material = hit_info.material;
         // Calculate the new ray direction
         float3 rand_direction;
         rng_state = rand_unit_float3(rand_direction, rng_state);
@@ -88,7 +90,7 @@ kernel void ray_trace(
         // Light strength calculates how much light hits the surface
         // The greater the angle between the normal and the ray direction, the less light hits the surface
         float light_strength = abs(dot(hit_info.normal, ray.direction));
-        float3 hit_color = material->albedo * 0.5; //* light_strength;
+        float3 hit_color = material->albedo * 0.5 * light_strength;
 
         if (depth == 0) {
           // If this is the first bounce no color has been calculated yet,

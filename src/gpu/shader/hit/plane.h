@@ -30,6 +30,8 @@ bool plane_hit(
     hit_info.normal = -normalize(plane.normal);
   }
 
+  hit_info.material = &plane.material;
+
   return true;
 }
 

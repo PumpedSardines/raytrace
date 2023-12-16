@@ -25,6 +25,7 @@ pub struct Uniforms {
     pub sphere_count: u32,
     pub plane_count: u32,
     pub triangle_count: u32,
+    pub bvh_nodes_count: u32,
     pub samples: u32,
     pub max_bounces: u32,
 }
@@ -42,7 +43,6 @@ pub(crate) struct Sphere {
     pub center: Vec3A,
     pub radius: f32,
     pub material: Material,
-    pub bbox: AABB,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -65,17 +65,12 @@ pub(crate) struct Triangle {
     pub bbox: AABB,
 }
 
-const BVH_INDEX_TYPE_NODE: u32 = 1;
-const BVH_INDEX_TYPE_SPHERE: u32 = 2;
-const BVH_INDEX_TYPE_TRIANGLE: u32 = 4;
-
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub(crate) struct BVHNode {
     pub left: u32,
-    pub left_type: u32,
     pub right: u32,
-    pub right_type: u32,
+    pub is_leaf: bool,
     pub aabb: AABB,
 }
 
@@ -94,10 +89,6 @@ impl Default for Sphere {
             center: Vec3A::new(0.0, 0.0, 0.0),
             radius: 0.0,
             material: Material::default(),
-            bbox: AABB {
-                min: Vec3A::new(0.0, 0.0, 0.0),
-                max: Vec3A::new(0.0, 0.0, 0.0),
-            },
         }
     }
 }
@@ -133,13 +124,30 @@ impl Default for BVHNode {
     fn default() -> Self {
         Self {
             left: 0,
-            left_type: 0,
             right: 0,
-            right_type: 0,
+            is_leaf: true,
             aabb: AABB {
                 min: Vec3A::new(0.0, 0.0, 0.0),
                 max: Vec3A::new(0.0, 0.0, 0.0),
             },
+        }
+    }
+}
+
+impl Default for AABB {
+    fn default() -> Self {
+        Self {
+            min: Vec3A::new(0.0, 0.0, 0.0),
+            max: Vec3A::new(0.0, 0.0, 0.0),
+        }
+    }
+}
+
+impl AABB {
+    pub(crate) fn combine(a: Self, b: Self) -> Self {
+        Self {
+            min: a.min.min(b.min),
+            max: a.max.max(b.max),
         }
     }
 }

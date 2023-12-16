@@ -36,6 +36,9 @@ const HIT_TRIANGLE_H_IMPORT: &str = import!("hit/triangle.h");
 const HIT_BVH_H: &str = include_str!("hit/bvh.h");
 const HIT_BVH_H_IMPORT: &str = import!("hit/bvh.h");
 
+const HIT_AABB_H: &str = include_str!("hit/aabb.h");
+const HIT_AABB_H_IMPORT: &str = import!("hit/aabb.h");
+
 pub const fn shader_file() -> &'static str {
     const PASS_1: &'static str = str_replace!(MAIN_METAL, RANDOM_H_IMPORT, RANDOM_H);
     const PASS_2: &'static str = str_replace!(PASS_1, INPUT_H_IMPORT, INPUT_H);
@@ -46,6 +49,7 @@ pub const fn shader_file() -> &'static str {
     const PASS_7: &'static str = str_replace!(PASS_6, HIT_PLANE_H_IMPORT, HIT_PLANE_H);
     const PASS_8: &'static str = str_replace!(PASS_7, HIT_TRIANGLE_H_IMPORT, HIT_TRIANGLE_H);
     const PASS_9: &'static str = str_replace!(PASS_8, HIT_BVH_H_IMPORT, HIT_BVH_H);
+    const PASS_10: &'static str = str_replace!(PASS_9, HIT_AABB_H_IMPORT, HIT_AABB_H);
 
-    PASS_9
+    PASS_10
 }

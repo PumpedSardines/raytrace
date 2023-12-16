@@ -17,6 +17,7 @@ struct Uniforms {
   uint sphere_count;
   uint plane_count;
   uint triangle_count;
+  uint bvh_nodes_count;
   uint samples;
   uint max_bounces;
 };
@@ -30,7 +31,6 @@ struct Sphere {
   float3 center;
   float radius;
   Material material;
-  AABB bbox;
 };
 
 struct Plane {
@@ -49,16 +49,9 @@ struct Triangle {
   AABB bbox;
 };
 
-enum BvhNodeType {
-  BvhNodeTypeNode = 1,
-  BvhNodeTypeSphere = 2,
-  BvhNodeTypeTriangle = 3,
-};
-
 struct BVHNode {
   uint left;
-  BvhNodeType left_type;
   uint right;
-  BvhNodeType right_type;
+  bool is_leaf;
   AABB bbox;
 };
