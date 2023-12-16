@@ -48,6 +48,11 @@ impl World {
             Obj::Sphere(sphere) => self.spheres.push(sphere.to_type_mapping()),
             Obj::Plane(plane) => self.planes.push(plane.to_type_mapping()),
             Obj::Triangle(triangle) => self.triangles.push(triangle.to_type_mapping()),
+            Obj::Mesh(mesh) => {
+                for triangle in mesh.to_type_mapping() {
+                    self.triangles.push(triangle);
+                }
+            }
         }
     }
 }
