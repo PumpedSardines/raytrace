@@ -9,7 +9,7 @@ bool sphere_hit(
   Ray ray,
   float t_min,
   float t_max,
-  thread HitInfo &hit_info
+  volatile thread HitInfo &hit_info
 ) {
   float3 oc = ray.origin - sphere.center;
   float a = dot(ray.direction, ray.direction);
@@ -47,7 +47,7 @@ bool plane_hit(
   Ray ray,
   float t_min,
   float t_max,
-  thread HitInfo &hit_info
+  volatile thread HitInfo &hit_info
 ) {
   float a = dot(ray.direction, plane.normal);
 
@@ -82,7 +82,7 @@ bool triangle_hit(
   Ray ray,
   float t_min,
   float t_max,
-  thread HitInfo &hit_info
+  volatile thread HitInfo &hit_info
 ) {
   float normal_dot_direction = dot(triangle.normal, ray.direction);
 
@@ -138,48 +138,35 @@ bool calc_hit(
   const device Triangle* triangles,
   const device Uniforms* uniforms,
   Ray ray,
-  thread const device Material ** material,
-  volatile thread HitInfo &hit_info_res
+  volatile thread const device Material ** material,
+  volatile thread HitInfo &hit_info
 ) {
-  HitInfo hit_info;
   bool hit = false;
   float closest = 10000.0;
 
-  /* for(uint i = 0; i < uniforms->plane_count; i++) { */
-  /*   HitInfo temp_hit_info; */
-  /*   if (plane_hit(planes[i], ray, 0.001, closest, temp_hit_info)) { */
-  /*     hit = true; */
-  /*     hit_info = temp_hit_info; */
-  /*     *material = &planes[i].material; */
-  /*     closest = temp_hit_info.t; */
-  /*   } */
-  /* } */
-
-  for(uint i = 0; i < uniforms->sphere_count; i++) {
-    HitInfo temp_hit_info;
-    if (sphere_hit(spheres[i], ray, 0.001, closest, temp_hit_info)) {
+  for(uint i = 0; i < uniforms->plane_count; i++) {
+    if (plane_hit(planes[i], ray, 0.001, closest, hit_info)) {
       hit = true;
-      hit_info = temp_hit_info;
-      *material = &spheres[i].material;
-      closest = temp_hit_info.t;
+      *material = &planes[i].material;
+      closest = hit_info.t;
     }
   }
 
-  /* for(uint i = 0; i < uniforms->triangle_count; i++) { */
-  /*   HitInfo temp_hit_info; */
-  /*   if (triangle_hit(triangles[i], ray, 0.001, closest, temp_hit_info)) { */
-  /*     hit = true; */
-  /*     hit_info = temp_hit_info; */
-  /*     *material = &triangles[i].material; */
-  /*     closest = temp_hit_info.t; */
-  /*   } */
-  /* } */
-
-  if (hit) {
-    hit_info_res.t = hit_info.t;
-    hit_info_res.point = hit_info.point;
-    hit_info_res.normal = hit_info.normal;
-    return true;
+  for(uint i = 0; i < uniforms->sphere_count; i++) {
+    if (sphere_hit(spheres[i], ray, 0.001, closest, hit_info)) {
+      hit = true;
+      *material = &spheres[i].material;
+      closest = hit_info.t;
+    }
   }
-  return false;
+
+  for(uint i = 0; i < uniforms->triangle_count; i++) {
+    if (triangle_hit(triangles[i], ray, 0.001, closest, hit_info)) {
+      hit = true;
+      *material = &triangles[i].material;
+      closest = hit_info.t;
+    }
+  }
+
+  return hit;
 }

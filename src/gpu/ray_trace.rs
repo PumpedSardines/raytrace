@@ -65,16 +65,22 @@ pub(crate) fn render(
         }
         println!("Done");
 
-        let ptr = buffers.output.contents() as *mut Vec3A;
+        let ptr = buffers.output.contents() as *mut f32;
         let mut data = vec![];
 
         unsafe {
             for i in 0..width * height {
-                let v = *ptr.add(i as usize) / image_samples as f32;
+                let i = i * 3;
+                let r = *ptr.add(i as usize) / image_samples as f32;
+                let g = *ptr.add(i as usize + 1) / image_samples as f32;
+                let b = *ptr.add(i as usize + 2) / image_samples as f32;
+
+                let color = Color::new(r, g, b);
+
                 if i == 0 {
-                    println!("{} {} {}", v.x, v.y, v.z);
+                    println!("{} {} {}", color.r, color.g, color.b);
                 }
-                data.push(Color::new(v.x, v.y, v.z));
+                data.push(Color::new(color.r, color.g, color.b));
             }
         };
 
@@ -199,10 +205,10 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
     };
 
     let output = {
-        let data = vec![Vec3A::new(0.0, 0.0, 0.0); (width * height) as usize];
+        let data = vec![0.0; (width * height) as usize * 3];
         device.new_buffer_with_data(
             unsafe { std::mem::transmute(data.as_ptr()) },
-            (data.len() * std::mem::size_of::<Vec3A>()) as u64,
+            (data.len() * std::mem::size_of::<f32>()) as u64,
             MTLResourceOptions::CPUCacheModeDefaultCache,
         )
     };

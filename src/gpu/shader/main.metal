@@ -13,8 +13,9 @@ using namespace metal;
 kernel void ray_trace(
   // Current pixel position, provided by the gpu
   uint2  gid [[ thread_position_in_grid ]],
-  // Output buffer
-  device float3 *output [[ buffer(0) ]],
+  // Output buffer, every pixel is represented by 3 floats (RGB)
+  // NOTE: index 9 is pixel 3 (9 / 3)
+  device float *output [[ buffer(0) ]],
 
   // Constant variables
   device const Uniforms *uniforms [[ buffer(1) ]],
@@ -29,7 +30,7 @@ kernel void ray_trace(
   
   uint width = camera->image_width;
   // The index of the current pixel in the output buffer
-  uint index = gid.y * width + gid.x;
+  uint index = (gid.y * width + gid.x);
 
   // Set up random state
   // NOTE: uniforms->seed is a seed that's sent by the cpu to generate variation in 
@@ -39,7 +40,9 @@ kernel void ray_trace(
 
   // The sum of all samples for the current pixel
   // NOTE: This color will be averaged later
-  float3 sum_of_colors = float3(0.0, 0.0, 0.0);
+  // WARNING: I have no f**king idea why this has to be volatile,
+  // but otherwise his will always be stuck at 0.0 0.0 0.0
+  volatile float3 sum_of_colors = float3(0.0, 0.0, 0.0);
 
   // Loop through all samples
   for(uint sample = 0; sample < uniforms->samples; sample++) {
@@ -53,12 +56,12 @@ kernel void ray_trace(
     );
 
     // The combined color of all bounces in the current sample
-    float3 current_color = float3(0.0, 0.0, 0.0);
+    volatile float3 current_color = float3(0.0, 0.0, 0.0);
 
     for(uint depth = 0; depth < uniforms->max_bounces; depth++) {
       // Check if the ray hits anything
       volatile HitInfo hit_info;
-      const device Material* material; // material is a pointer to the material of the hit object
+      volatile const device Material* material;
       bool hit = calc_hit(
         spheres,
         planes,
@@ -84,7 +87,7 @@ kernel void ray_trace(
         // Light strength calculates how much light hits the surface
         // The greater the angle between the normal and the ray direction, the less light hits the surface
         float light_strength = abs(dot(hit_info.normal, ray.direction));
-        float3 hit_color = material->albedo * 0.5 * light_strength;
+        float3 hit_color = material->albedo * 0.5; //* light_strength;
 
         if (depth == 0) {
           // If this is the first bounce no color has been calculated yet,
@@ -93,6 +96,7 @@ kernel void ray_trace(
         } else {
           current_color *= hit_color;
         }
+
       } else {
         // Calculate the sky color
         float t = 0.5 * (ray.direction.y + 1.0);
@@ -111,5 +115,6 @@ kernel void ray_trace(
     sum_of_colors += current_color;
   }
   
-  output[index] += to_gamma(sum_of_colors / (float)uniforms->samples);
+  float3 final_color = to_gamma(sum_of_colors / (float)uniforms->samples);
+  add_output(output, index, final_color);
 }
