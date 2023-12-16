@@ -15,10 +15,10 @@ bool bvh_node_hit(
 
   const device BVHNode* current_node = &bvh_nodes[0];
 
+  volatile int i = 0;
+
   while (true) {
-
     if (current_node->is_leaf) {
-
       bool did_left_hit = triangle_hit(
         triangles[current_node->left],
         ray,
@@ -26,7 +26,6 @@ bool bvh_node_hit(
         t_max,
         hit_info
       );
-
 
       if (did_left_hit) {
         t_max = hit_info.t;
@@ -48,13 +47,20 @@ bool bvh_node_hit(
 
       if (stack_pointer == 0) {
         break;
-      } else {
-        stack_pointer--;
-        current_node = &bvh_nodes[stack[stack_pointer]];
       }
+
+      stack_pointer--;
+      current_node = &bvh_nodes[stack[stack_pointer]];
+      i = 1;
+
+      /* if (i == 1) { */
+        break;
+      /* } */
+
 
       continue;
     }
+
 
     const device BVHNode* left_node = &bvh_nodes[current_node->left];
     const device BVHNode* right_node = &bvh_nodes[current_node->right];
