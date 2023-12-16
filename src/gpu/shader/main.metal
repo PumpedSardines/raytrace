@@ -8,7 +8,6 @@ using namespace metal;
 #include "input.h"
 #include "random.h"
 #include "ray.h"
-
 #include "hit.h"
 
 kernel void ray_trace(
@@ -20,6 +19,7 @@ kernel void ray_trace(
 
   device const Sphere *spheres [[ buffer(3) ]],
   device const Plane *planes [[ buffer(4) ]],
+  device const Triangle *triangles [[ buffer(5) ]]
 ) {
 
   uint width = camera->image_width;
@@ -62,6 +62,7 @@ kernel void ray_trace(
       bool hit = calc_hit(
         spheres,
         planes,
+        triangles,
         uniforms,
         ray,
         &material,

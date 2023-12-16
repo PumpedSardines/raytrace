@@ -65,6 +65,47 @@ bool plane_hit(const device Plane& plane, Ray ray, float t_min, float t_max, thr
   return true;
 }
 
+bool triangle_hit(const device Triangle& triangle, Ray ray, float t_min, float t_max, thread HitInfo &hit_info) {
+  float normal_dot_direction = dot(triangle.normal, ray.direction);
+
+  if (abs(normal_dot_direction) < 0.0001) {
+    return false;
+  }
+
+  float t = -(dot(triangle.normal, ray.origin) + triangle.distance) / normal_dot_direction;
+
+  if (t < t_min || t > t_max) {
+    return false;
+  }
+
+  float3 point = ray_point_at(ray, t);
+
+  float3 edge0 = triangle.b - triangle.a;
+  float3 edge1 = triangle.c - triangle.b;
+  float3 edge2 = triangle.a - triangle.c;
+  
+  float3 c0 = point - triangle.a;
+  float3 c1 = point - triangle.b;
+  float3 c2 = point - triangle.c;
+
+  float3 test0 = cross(edge0, c0);
+  float3 test1 = cross(edge1, c1);
+  float3 test2 = cross(edge2, c2);
+
+  if (
+    dot(triangle.normal, test0) < 0.0 ||
+    dot(triangle.normal, test1) < 0.0 ||
+    dot(triangle.normal, test2) < 0.0
+  ) {
+    return false;
+  }
+
+  hit_info.t = t;
+  hit_info.point = point;
+  hit_info.normal = normalize(triangle.normal);
+
+}
+
 bool calc_hit(
   const device Sphere* spheres,
   const device Plane* planes,

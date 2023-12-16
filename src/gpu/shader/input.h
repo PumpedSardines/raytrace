@@ -11,6 +11,7 @@ struct Uniforms {
   uint seed;
   uint sphere_count;
   uint plane_count;
+  uint triangle_count;
   uint samples;
   uint max_bounces;
 };
@@ -27,6 +28,15 @@ struct Sphere {
 };
 
 struct Plane {
+  float3 normal;
+  float distance;
+  Material material;
+};
+
+struct Triangle {
+  float3 a;
+  float3 b;
+  float3 c;
   float3 normal;
   float distance;
   Material material;
