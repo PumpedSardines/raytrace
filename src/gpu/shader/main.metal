@@ -25,7 +25,8 @@ kernel void ray_trace(
   // Scene objects
   device const Sphere *spheres [[ buffer(3) ]],
   device const Plane *planes [[ buffer(4) ]],
-  device const Triangle *triangles [[ buffer(5) ]]
+  device const Triangle *triangles [[ buffer(5) ]],
+  device const BVHNode *bvh_nodes [[ buffer(6) ]]
 ) {
   
   uint width = camera->image_width;

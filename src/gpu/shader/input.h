@@ -7,6 +7,11 @@ struct Camera {
   uint image_height;
 };
 
+struct AABB {
+  float3 min;
+  float3 max;
+};
+
 struct Uniforms {
   uint seed;
   uint sphere_count;
@@ -25,6 +30,7 @@ struct Sphere {
   float3 center;
   float radius;
   Material material;
+  AABB bbox;
 };
 
 struct Plane {
@@ -40,4 +46,19 @@ struct Triangle {
   float3 normal;
   float distance;
   Material material;
+  AABB bbox;
+};
+
+enum BvhNodeType {
+  BvhNodeTypeNode = 1,
+  BvhNodeTypeSphere = 2,
+  BvhNodeTypeTriangle = 3,
+};
+
+struct BVHNode {
+  uint left;
+  BvhNodeType left_type;
+  uint right;
+  BvhNodeType right_type;
+  AABB bbox;
 };

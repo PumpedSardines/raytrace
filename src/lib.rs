@@ -6,4 +6,5 @@ pub mod position;
 pub mod renderer;
 pub mod world;
 
+pub(crate) mod bvh;
 pub(crate) mod gpu;

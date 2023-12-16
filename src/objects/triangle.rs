@@ -36,6 +36,10 @@ impl ToTypeMapping for Triangle {
             point_c: v[2],
             normal,
             distance,
+            bbox: crate::gpu::type_mapping::AABB {
+                min: v[0].min(v[1]).min(v[2]),
+                max: v[0].max(v[1]).max(v[2]),
+            },
             material: self.material.to_type_mapping(),
         }
     }

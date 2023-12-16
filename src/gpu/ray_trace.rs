@@ -54,6 +54,7 @@ pub(crate) fn render(
             encoder.set_buffer(3, Some(&buffers.spheres), 0);
             encoder.set_buffer(4, Some(&buffers.planes), 0);
             encoder.set_buffer(5, Some(&buffers.triangles), 0);
+            encoder.set_buffer(6, Some(&buffers.bvh_nodes), 0);
 
             println!("Pass: {}", i);
             update_uniforms_seed(&buffers.uniforms, rand.gen());
@@ -112,6 +113,7 @@ pub(crate) struct Buffers {
     spheres: metal::Buffer,
     planes: metal::Buffer,
     triangles: metal::Buffer,
+    bvh_nodes: metal::Buffer,
 }
 
 fn update_uniforms_seed(buffer: &metal::Buffer, seed: u32) {
@@ -137,6 +139,7 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
     let spheres: &Vec<type_mapping::Sphere> = &data.spheres;
     let planes: &Vec<type_mapping::Plane> = &data.planes;
     let triangles: &Vec<type_mapping::Triangle> = &data.triangles;
+    let bvh_nodes: &Vec<type_mapping::BVHNode> = &data.bvh_nodes;
     let camera: &type_mapping::Camera = &data.camera;
 
     let camera = device.new_buffer_with_data(
@@ -200,6 +203,19 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
         )
     };
 
+    let bvh_nodes = {
+        let bvh_nodes = match bvh_nodes.len() {
+            0 => vec![type_mapping::BVHNode::default()],
+            _ => bvh_nodes.to_vec(),
+        };
+
+        device.new_buffer_with_data(
+            unsafe { std::mem::transmute(bvh_nodes.as_ptr()) },
+            (bvh_nodes.len() * std::mem::size_of::<type_mapping::BVHNode>()) as u64,
+            MTLResourceOptions::CPUCacheModeDefaultCache,
+        )
+    };
+
     let output = {
         let data = vec![0.0; (width * height) as usize * 3];
         device.new_buffer_with_data(
@@ -213,6 +229,7 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
         camera,
         uniforms,
         triangles,
+        bvh_nodes,
         spheres,
         planes,
         output,

@@ -1,4 +1,5 @@
 use crate::{
+    bvh::build_bvh_tree,
     camera::Camera,
     gpu::type_mapping,
     gpu::type_mapping::ToTypeMapping,
@@ -9,7 +10,9 @@ pub struct World {
     pub(crate) spheres: Vec<type_mapping::Sphere>,
     pub(crate) planes: Vec<type_mapping::Plane>,
     pub(crate) triangles: Vec<type_mapping::Triangle>,
+    pub(crate) bvh_nodes: Vec<type_mapping::BVHNode>,
     pub(crate) camera: type_mapping::Camera,
+    pub(crate) is_built: bool,
 }
 
 impl World {
@@ -18,7 +21,9 @@ impl World {
             spheres: Vec::new(),
             planes: Vec::new(),
             triangles: Vec::new(),
+            bvh_nodes: Vec::new(),
             camera: Camera::new().to_type_mapping(),
+            is_built: false,
         }
     }
 
@@ -40,10 +45,14 @@ impl World {
     }
 
     pub fn add_object(&mut self, object: impl ToObj) {
+        assert!(!self.is_built);
+
         self.add_obj(object.to_obj());
     }
 
     fn add_obj(&mut self, obj: Obj) {
+        assert!(!self.is_built);
+
         match obj {
             Obj::Sphere(sphere) => self.spheres.push(sphere.to_type_mapping()),
             Obj::Plane(plane) => self.planes.push(plane.to_type_mapping()),
@@ -54,5 +63,11 @@ impl World {
                 }
             }
         }
+    }
+
+    pub fn build(&mut self) {
+        assert!(!self.is_built);
+        self.bvh_nodes = build_bvh_tree(&self.triangles, &self.spheres);
+        self.is_built = true;
     }
 }

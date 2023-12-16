@@ -60,6 +60,8 @@ impl RayTraceRenderer {
     }
 
     pub fn render(&self, world: &World, options: &RayTraceRenderOptions) -> Vec<Color> {
+        assert!(world.is_built);
+
         ray_trace::render(
             &self.device,
             &self.pipeline_state,

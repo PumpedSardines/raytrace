@@ -16,7 +16,7 @@ fn main() {
 
     let renderer = RayTraceRenderer::new();
 
-    let world = World::new()
+    let mut world = World::new()
         .with_camera(Camera {
             origin: Position::new(2.5, 1.0, 1.5),
             direction: Vector::new(-0.7, -0.3, -1.0),
@@ -81,6 +81,8 @@ fn main() {
                 roughness: 0.9,
             },
         });
+
+    world.build();
 
     let options = RayTraceRenderOptions::default()
         .with_image_samples(10)

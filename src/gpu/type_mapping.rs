@@ -13,6 +13,13 @@ pub(crate) struct Camera {
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
+pub(crate) struct AABB {
+    pub min: Vec3A,
+    pub max: Vec3A,
+}
+
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub struct Uniforms {
     pub seed: u32,
     pub sphere_count: u32,
@@ -35,6 +42,7 @@ pub(crate) struct Sphere {
     pub center: Vec3A,
     pub radius: f32,
     pub material: Material,
+    pub bbox: AABB,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -54,6 +62,21 @@ pub(crate) struct Triangle {
     pub normal: Vec3A,
     pub distance: f32,
     pub material: Material,
+    pub bbox: AABB,
+}
+
+const BVH_INDEX_TYPE_NODE: u32 = 1;
+const BVH_INDEX_TYPE_SPHERE: u32 = 2;
+const BVH_INDEX_TYPE_TRIANGLE: u32 = 4;
+
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+pub(crate) struct BVHNode {
+    pub left: u32,
+    pub left_type: u32,
+    pub right: u32,
+    pub right_type: u32,
+    pub aabb: AABB,
 }
 
 impl Default for Material {
@@ -71,6 +94,10 @@ impl Default for Sphere {
             center: Vec3A::new(0.0, 0.0, 0.0),
             radius: 0.0,
             material: Material::default(),
+            bbox: AABB {
+                min: Vec3A::new(0.0, 0.0, 0.0),
+                max: Vec3A::new(0.0, 0.0, 0.0),
+            },
         }
     }
 }
@@ -94,6 +121,25 @@ impl Default for Triangle {
             normal: Vec3A::new(0.0, 0.0, 0.0),
             distance: 0.0,
             material: Material::default(),
+            bbox: AABB {
+                min: Vec3A::new(0.0, 0.0, 0.0),
+                max: Vec3A::new(0.0, 0.0, 0.0),
+            },
+        }
+    }
+}
+
+impl Default for BVHNode {
+    fn default() -> Self {
+        Self {
+            left: 0,
+            left_type: 0,
+            right: 0,
+            right_type: 0,
+            aabb: AABB {
+                min: Vec3A::new(0.0, 0.0, 0.0),
+                max: Vec3A::new(0.0, 0.0, 0.0),
+            },
         }
     }
 }
