@@ -26,7 +26,7 @@ pub(crate) fn render(
         };
         let buffers = create_buffers(&device, &world, &options);
 
-        let image_samples = 1; //options.image_samples;
+        let image_samples = options.image_samples;
 
         for i in 0..image_samples {
             let command_queue = device.new_command_queue();
