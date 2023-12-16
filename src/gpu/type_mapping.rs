@@ -17,6 +17,7 @@ pub struct Uniforms {
     pub seed: u32,
     pub sphere_count: u32,
     pub plane_count: u32,
+    pub triangle_count: u32,
     pub samples: u32,
     pub max_bounces: u32,
 }
@@ -44,6 +45,17 @@ pub(crate) struct Plane {
     pub material: Material,
 }
 
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+pub(crate) struct Triangle {
+    pub point_a: Vec3A,
+    pub point_b: Vec3A,
+    pub point_c: Vec3A,
+    pub normal: Vec3A,
+    pub distance: f32,
+    pub material: Material,
+}
+
 impl Default for Material {
     fn default() -> Self {
         Self {
@@ -66,6 +78,19 @@ impl Default for Sphere {
 impl Default for Plane {
     fn default() -> Self {
         Self {
+            normal: Vec3A::new(0.0, 0.0, 0.0),
+            distance: 0.0,
+            material: Material::default(),
+        }
+    }
+}
+
+impl Default for Triangle {
+    fn default() -> Self {
+        Self {
+            point_a: Vec3A::new(0.0, 0.0, 0.0),
+            point_b: Vec3A::new(0.0, 0.0, 0.0),
+            point_c: Vec3A::new(0.0, 0.0, 0.0),
             normal: Vec3A::new(0.0, 0.0, 0.0),
             distance: 0.0,
             material: Material::default(),

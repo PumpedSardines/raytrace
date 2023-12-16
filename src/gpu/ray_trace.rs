@@ -27,6 +27,7 @@ pub(crate) fn render(
         let buffers = create_buffers(&device, &world, &options);
 
         let image_samples = options.image_samples;
+
         for i in 0..image_samples {
             let command_queue = device.new_command_queue();
             let command_buffer = command_queue.new_command_buffer();
@@ -52,6 +53,7 @@ pub(crate) fn render(
             encoder.set_buffer(2, Some(&buffers.camera), 0);
             encoder.set_buffer(3, Some(&buffers.spheres), 0);
             encoder.set_buffer(4, Some(&buffers.planes), 0);
+            encoder.set_buffer(5, Some(&buffers.triangles), 0);
 
             println!("Pass: {}", i);
             update_uniforms_seed(&buffers.uniforms, rand.gen());
@@ -63,13 +65,18 @@ pub(crate) fn render(
         }
         println!("Done");
 
-        let ptr = buffers.output.contents() as *mut Vec3A;
+        let ptr = buffers.output.contents() as *mut f32;
         let mut data = vec![];
 
         unsafe {
             for i in 0..width * height {
-                let v = *ptr.add(i as usize) / image_samples as f32;
-                data.push(Color::new(v.x, v.y, v.z));
+                let i = i * 3;
+                let r = *ptr.add(i as usize) / image_samples as f32;
+                let g = *ptr.add(i as usize + 1) / image_samples as f32;
+                let b = *ptr.add(i as usize + 2) / image_samples as f32;
+
+                let color = Color::new(r, g, b);
+                data.push(Color::new(color.r, color.g, color.b));
             }
         };
 
@@ -104,6 +111,7 @@ pub(crate) struct Buffers {
     uniforms: metal::Buffer,
     spheres: metal::Buffer,
     planes: metal::Buffer,
+    triangles: metal::Buffer,
 }
 
 fn update_uniforms_seed(buffer: &metal::Buffer, seed: u32) {
@@ -128,6 +136,7 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
     let height = data.camera.image_height;
     let spheres: &Vec<type_mapping::Sphere> = &data.spheres;
     let planes: &Vec<type_mapping::Plane> = &data.planes;
+    let triangles: &Vec<type_mapping::Triangle> = &data.triangles;
     let camera: &type_mapping::Camera = &data.camera;
 
     let camera = device.new_buffer_with_data(
@@ -142,6 +151,7 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
             samples: options.pixel_samples,
             sphere_count: spheres.len() as u32,
             plane_count: planes.len() as u32,
+            triangle_count: triangles.len() as u32,
             max_bounces: options.max_bounces,
         };
         device.new_buffer_with_data(
@@ -177,11 +187,24 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
         )
     };
 
+    let triangles = {
+        let triangles = match triangles.len() {
+            0 => vec![type_mapping::Triangle::default()],
+            _ => triangles.to_vec(),
+        };
+
+        device.new_buffer_with_data(
+            unsafe { std::mem::transmute(triangles.as_ptr()) },
+            (triangles.len() * std::mem::size_of::<type_mapping::Triangle>()) as u64,
+            MTLResourceOptions::CPUCacheModeDefaultCache,
+        )
+    };
+
     let output = {
-        let data = vec![Vec3A::new(0.0, 0.0, 0.0); (width * height) as usize];
+        let data = vec![0.0; (width * height) as usize * 3];
         device.new_buffer_with_data(
             unsafe { std::mem::transmute(data.as_ptr()) },
-            (data.len() * std::mem::size_of::<Vec3A>()) as u64,
+            (data.len() * std::mem::size_of::<f32>()) as u64,
             MTLResourceOptions::CPUCacheModeDefaultCache,
         )
     };
@@ -189,6 +212,7 @@ fn create_buffers(device: &Device, data: &World, options: &RayTraceRenderOptions
     Buffers {
         camera,
         uniforms,
+        triangles,
         spheres,
         planes,
         output,

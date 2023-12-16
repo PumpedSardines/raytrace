@@ -8,6 +8,7 @@ use crate::{
 pub struct World {
     pub(crate) spheres: Vec<type_mapping::Sphere>,
     pub(crate) planes: Vec<type_mapping::Plane>,
+    pub(crate) triangles: Vec<type_mapping::Triangle>,
     pub(crate) camera: type_mapping::Camera,
 }
 
@@ -16,6 +17,7 @@ impl World {
         Self {
             spheres: Vec::new(),
             planes: Vec::new(),
+            triangles: Vec::new(),
             camera: Camera::new().to_type_mapping(),
         }
     }
@@ -45,6 +47,7 @@ impl World {
         match obj {
             Obj::Sphere(sphere) => self.spheres.push(sphere.to_type_mapping()),
             Obj::Plane(plane) => self.planes.push(plane.to_type_mapping()),
+            Obj::Triangle(triangle) => self.triangles.push(triangle.to_type_mapping()),
         }
     }
 }
