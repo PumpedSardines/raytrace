@@ -1,4 +1,4 @@
-bool triangle_hit(
+inline bool triangle_hit(
   const device Triangle& triangle,
   Ray ray,
   float t_min,
