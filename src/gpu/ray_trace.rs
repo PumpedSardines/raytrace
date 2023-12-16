@@ -76,10 +76,6 @@ pub(crate) fn render(
                 let b = *ptr.add(i as usize + 2) / image_samples as f32;
 
                 let color = Color::new(r, g, b);
-
-                if i == 0 {
-                    println!("{} {} {}", color.r, color.g, color.b);
-                }
                 data.push(Color::new(color.r, color.g, color.b));
             }
         };
