@@ -36,49 +36,48 @@ inline float sphere_hit(
 
 
   if (did_hit == 1.0) {
-    hit_info->t      = mix(hit_info->t,      t,      did_hit);
-    hit_info->point  = mix(hit_info->point,  point,  did_hit);
-    hit_info->normal = mix(hit_info->normal, normal, did_hit);
+    hit_info->t = t;
+    hit_info->point = point;
+    hit_info->normal = normal;
+    return did_hit;
 
     return 1.0;
   }
-
+  
   return 0.0;
 }
 
-bool plane_hit(
+float plane_hit(
   const device Plane& plane,
   Ray ray,
-  float t_min,
-  float t_max,
-  volatile thread HitInfo &hit_info
+  volatile thread HitInfo* hit_info
 ) {
   float a = dot(ray.direction, plane.normal);
 
-  if (abs(a) < 0.0001) {
-    return false;
-  }
+  float is_a_not_zero = step(0.0001, abs(a));
 
   float b = plane.distance - dot(ray.origin, plane.normal);
 
   float t = b / a;
 
-  if (t < t_min || t > t_max) {
-    return false;
+  float t_check = step(T_MIN, t) * step(t, hit_info->t);
+
+  float did_hit = is_a_not_zero * t_check;
+
+  float is_back_face = step(0.0, dot(ray.direction, plane.normal));
+  float3 outwards_normal = plane.normal;
+  float3 normal = mix(normalize(outwards_normal), -normalize(outwards_normal), is_back_face);
+
+
+  if (did_hit == 1.0) {
+    hit_info->t = t;
+    hit_info->point = ray_point_at(ray, t);
+    hit_info->normal = normal;
+
+    return 1.0;
   }
 
-  bool front_face = dot(ray.direction, plane.normal) < 0.0;
-
-  hit_info.t = t;
-  hit_info.point = ray_point_at(ray, t);
-
-  if (front_face) {
-    hit_info.normal = normalize(plane.normal);
-  } else {
-    hit_info.normal = -normalize(plane.normal);
-  }
-
-  return true;
+  return 0.0;
 }
 
 bool triangle_hit(
@@ -149,13 +148,14 @@ float calc_hit(
   float hit = 0.0;
   hit_info->t = 10000;
 
-  /* for(uint i = 0; i < uniforms->plane_count; i++) { */
-  /*   if (plane_hit(planes[i], ray, 0.001, closest, hit_info)) { */
-  /*     hit = true; */
-  /*     *material = &planes[i].material; */
-  /*     closest = hit_info.t; */
-  /*   } */
-  /* } */
+  for(uint i = 0; i < uniforms->plane_count; i++) {
+    float did_plane_hit = plane_hit(planes[i], ray, hit_info);
+
+    hit = saturate(hit + did_plane_hit);
+    const device Material& m = planes[i].material;
+    material.albedo = mix(material.albedo, m.albedo, did_plane_hit);
+    material.roughness = mix(material.roughness, m.roughness, did_plane_hit);
+  }
 
   for(uint i = 0; i < uniforms->sphere_count; i++) {
     float did_sphere_hit = sphere_hit(spheres[i], ray, hit_info);

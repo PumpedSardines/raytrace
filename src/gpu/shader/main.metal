@@ -75,7 +75,7 @@ kernel void ray_trace(
         &hit_info
       );
 
-      if (hit > 0.5) {
+      if (hit >= 1.0) {
         // Calculate the new ray direction
         float3 rand_direction;
         rng_state = rand_unit_float3(rand_direction, rng_state);
@@ -100,12 +100,6 @@ kernel void ray_trace(
           saturate(depth)
         );
 
-        /* set_output( */
-        /*   output, */
-        /*   index, */
-        /*   material.albedo */
-        /* ); */
-        /* return; */
       } else {
         // Calculate the sky color
         float t = 0.5 * (ray.direction.y + 1.0);
