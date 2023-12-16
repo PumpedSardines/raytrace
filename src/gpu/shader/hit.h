@@ -4,12 +4,13 @@ struct HitInfo {
   float3 normal;
 };
 
-bool sphere_hit(
+constant float T_MIN = 0.001;
+
+// 0.0 if no hit, 1.0 if hit
+inline float sphere_hit(
   const device Sphere& sphere,
   Ray ray,
-  float t_min,
-  float t_max,
-  volatile thread HitInfo &hit_info
+  volatile thread HitInfo* hit_info
 ) {
   float3 oc = ray.origin - sphere.center;
   float a = dot(ray.direction, ray.direction);
@@ -17,29 +18,32 @@ bool sphere_hit(
   float c = dot(oc, oc) - sphere.radius * sphere.radius;
   float discriminant = b * b - 4.0 * a * c;
 
-  if (discriminant < 0) {
-    return false;
-  }
+  // If the discriminant is less than 0, the ray does not hit the sphere
+  float discriminant_gt_0 = step(0.0, discriminant);
 
   float t = (-b - sqrt(discriminant)) / (2.0 * a);
 
-  if(t < t_min || t > t_max) {
-    return false;
-  }
+  // If the t value is outside the min and max, the ray does not hit the sphere
+  float t_check = step(T_MIN, t) * step(t, hit_info->t);
 
   float3 outwards_normal = (ray_point_at(ray, t) - sphere.center);
-  bool front_face = dot(ray.direction, outwards_normal) < 0.0;
+  float did_hit = t_check * discriminant_gt_0;
 
-  hit_info.t = t;
-  hit_info.point = ray_point_at(ray, t);
-  
-  if (front_face) {
-    hit_info.normal = normalize(outwards_normal);
-  } else {
-    hit_info.normal = -normalize(outwards_normal);
+  // 1.0 if back face, 0.0 if front face
+  float is_back_face = step(0.0, dot(ray.direction, outwards_normal));
+  float3 point = ray_point_at(ray, t);
+  float3 normal = mix(normalize(outwards_normal), -normalize(outwards_normal), is_back_face);
+
+
+  if (did_hit == 1.0) {
+    hit_info->t      = mix(hit_info->t,      t,      did_hit);
+    hit_info->point  = mix(hit_info->point,  point,  did_hit);
+    hit_info->normal = mix(hit_info->normal, normal, did_hit);
+
+    return 1.0;
   }
 
-  return true;
+  return 0.0;
 }
 
 bool plane_hit(
@@ -132,41 +136,43 @@ bool triangle_hit(
   return false;
 }
 
-bool calc_hit(
+// 0.0 if no hit, 1.0 if hit
+float calc_hit(
   const device Sphere* spheres,
   const device Plane* planes,
   const device Triangle* triangles,
   const device Uniforms* uniforms,
   Ray ray,
-  volatile thread const device Material ** material,
-  volatile thread HitInfo &hit_info
+  volatile thread Material &material,
+  volatile thread HitInfo *hit_info
 ) {
-  bool hit = false;
-  float closest = 10000.0;
+  float hit = 0.0;
+  hit_info->t = 10000;
 
-  for(uint i = 0; i < uniforms->plane_count; i++) {
-    if (plane_hit(planes[i], ray, 0.001, closest, hit_info)) {
-      hit = true;
-      *material = &planes[i].material;
-      closest = hit_info.t;
-    }
-  }
+  /* for(uint i = 0; i < uniforms->plane_count; i++) { */
+  /*   if (plane_hit(planes[i], ray, 0.001, closest, hit_info)) { */
+  /*     hit = true; */
+  /*     *material = &planes[i].material; */
+  /*     closest = hit_info.t; */
+  /*   } */
+  /* } */
 
   for(uint i = 0; i < uniforms->sphere_count; i++) {
-    if (sphere_hit(spheres[i], ray, 0.001, closest, hit_info)) {
-      hit = true;
-      *material = &spheres[i].material;
-      closest = hit_info.t;
-    }
+    float did_sphere_hit = sphere_hit(spheres[i], ray, hit_info);
+  
+    hit = saturate(hit + did_sphere_hit);
+    const device Material& m = spheres[i].material;
+    material.albedo = mix(material.albedo, m.albedo, did_sphere_hit);
+    material.roughness = mix(material.roughness, m.roughness, did_sphere_hit);
   }
 
-  for(uint i = 0; i < uniforms->triangle_count; i++) {
-    if (triangle_hit(triangles[i], ray, 0.001, closest, hit_info)) {
-      hit = true;
-      *material = &triangles[i].material;
-      closest = hit_info.t;
-    }
-  }
+  /* for(uint i = 0; i < uniforms->triangle_count; i++) { */
+  /*   if (triangle_hit(triangles[i], ray, 0.001, closest, hit_info)) { */
+  /*     hit = true; */
+  /*     *material = &triangles[i].material; */
+  /*     closest = hit_info.t; */
+  /*   } */
+  /* } */
 
   return hit;
 }

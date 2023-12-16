@@ -29,6 +29,8 @@ kernel void ray_trace(
 ) {
   
   uint width = camera->image_width;
+  // PERF: needs to be float due to optimization above
+  float max_bounces = (float) uniforms->max_bounces;
   // The index of the current pixel in the output buffer
   uint index = (gid.y * width + gid.x);
 
@@ -56,29 +58,30 @@ kernel void ray_trace(
     );
 
     // The combined color of all bounces in the current sample
-    volatile float3 current_color = float3(0.0, 0.0, 0.0);
+    volatile float3 current_color = float3(0.0, 1.0, 0.0);
 
-    for(uint depth = 0; depth < uniforms->max_bounces; depth++) {
+    for(float depth = 0; depth < max_bounces; depth++) {
       // Check if the ray hits anything
       volatile HitInfo hit_info;
-      volatile const device Material* material;
-      bool hit = calc_hit(
+      volatile Material material;
+
+      float hit = calc_hit(
         spheres,
         planes,
         triangles,
         uniforms,
         ray,
-        &material,
-        hit_info
+        material,
+        &hit_info
       );
 
-      if (hit) {
+      if (hit > 0.5) {
         // Calculate the new ray direction
         float3 rand_direction;
         rng_state = rand_unit_float3(rand_direction, rng_state);
         float3 diffuse_direction = rand_direction + hit_info.normal;
         float3 reflect_direction = reflect(ray.direction, hit_info.normal);
-        float3 scatter_direction = lerp(reflect_direction, diffuse_direction, material->roughness);
+        float3 scatter_direction = mix(reflect_direction, diffuse_direction, material.roughness);
 
         // Set ray to to go in a new direction
         ray.origin = hit_info.point;
@@ -87,26 +90,32 @@ kernel void ray_trace(
         // Light strength calculates how much light hits the surface
         // The greater the angle between the normal and the ray direction, the less light hits the surface
         float light_strength = abs(dot(hit_info.normal, ray.direction));
-        float3 hit_color = material->albedo * 0.5; //* light_strength;
+        float3 hit_color = material.albedo * 0.5 * light_strength;
 
-        if (depth == 0) {
-          // If this is the first bounce no color has been calculated yet,
-          // therefore we set the color to the hit color instead of multiply
-          current_color = hit_color;
-        } else {
-          current_color *= hit_color;
-        }
+        // If this is the first bounce no color has been calculated yet,
+        // therefore we set the color to the hit color instead of multiply
+        current_color = mix(
+          hit_color,
+          current_color * hit_color, 
+          saturate(depth)
+        );
 
+        /* set_output( */
+        /*   output, */
+        /*   index, */
+        /*   material.albedo */
+        /* ); */
+        /* return; */
       } else {
         // Calculate the sky color
         float t = 0.5 * (ray.direction.y + 1.0);
-        float3 sky_color = lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.7, 1.0), t);
+        float3 sky_color = mix(float3(1.0, 1.0, 1.0), float3(0.5, 0.7, 1.0), t);
 
-        if (depth == 0) {
-          current_color = sky_color;
-        } else {
-          current_color *= sky_color;
-        }
+        current_color = mix(
+          sky_color,
+          current_color * sky_color, 
+          saturate(depth)
+        );
 
         break;
       }
